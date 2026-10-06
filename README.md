@@ -272,3 +272,249 @@ DELETE /candidaturas/:id
 Os dados serão armazenados no MongoDB.
 
 ##
+
+
+# Histórias de Usuário
+
+As histórias de usuário foram definidas de acordo com o cronograma de desenvolvimento do projeto, sendo uma história para cada dia de trabalho.
+
+---
+
+## US01 — Análise e planejamento
+
+**Como equipe, queremos analisar o problema, definir as funcionalidades, entidades, arquitetura e responsabilidades do projeto, para organizar o desenvolvimento do 8Jobs.**
+
+**Dia:** 1
+
+**Entrega:**
+- Documento inicial;
+- Funcionalidades definidas;
+- Entidades definidas;
+- Histórias de usuário;
+- Arquitetura;
+- Divisão das tarefas da equipe.
+
+---
+
+## US02 — Banco e estrutura do projeto
+
+**Como equipe de desenvolvimento, queremos configurar o MongoDB, a estrutura dos projetos, o Node.js, o Express e o Git/GitHub, para preparar o ambiente necessário para o desenvolvimento do 8Jobs.**
+
+**Dia:** 2
+
+**Entrega:**
+- Banco MongoDB configurado;
+- Collections definidas;
+- Estrutura dos projetos criada;
+- Node.js e Express configurados;
+- Git/GitHub configurados.
+
+---
+
+## US03 — Microserviço de empresas
+
+**Como empresa, quero cadastrar, consultar, alterar e excluir meus dados, para manter minhas informações disponíveis e atualizadas na plataforma.**
+
+**Dia:** 3
+
+**Funcionalidades:**
+- Listar empresas;
+- Consultar empresa por ID;
+- Cadastrar empresa;
+- Alterar empresa;
+- Excluir empresa.
+
+**Rotas:**
+
+```text
+GET    /empresas
+GET    /empresas/:id
+POST   /empresas
+PUT    /empresas/:id
+DELETE /empresas/:id
+```
+
+---
+
+## US04 — Microserviço de vagas
+
+**Como empresa, quero cadastrar, consultar, alterar e excluir vagas de emprego, para divulgar e manter atualizadas as oportunidades disponíveis na plataforma.**
+
+**Dia:** 4
+
+**Funcionalidades:**
+- Listar vagas;
+- Consultar vaga por ID;
+- Cadastrar vaga;
+- Alterar vaga;
+- Excluir vaga.
+
+**Rotas:**
+
+```text
+GET    /vagas
+GET    /vagas/:id
+POST   /vagas
+PUT    /vagas/:id
+DELETE /vagas/:id
+```
+
+---
+
+## US05 — Candidatos e candidaturas
+
+**Como candidato, quero cadastrar meus dados e realizar candidaturas às vagas disponíveis, para participar dos processos seletivos.**
+
+**Dia:** 5
+
+**Funcionalidades:**
+- Cadastrar candidato;
+- Listar candidatos;
+- Consultar candidato;
+- Alterar candidato;
+- Excluir candidato;
+- Realizar candidatura;
+- Consultar candidaturas;
+- Integrar candidatos, vagas e candidaturas.
+
+**Rotas principais:**
+
+```text
+GET    /candidatos
+GET    /candidatos/:id
+POST   /candidatos
+PUT    /candidatos/:id
+DELETE /candidatos/:id
+
+GET    /candidaturas
+GET    /candidaturas/:id
+POST   /candidaturas
+PUT    /candidaturas/:id
+DELETE /candidaturas/:id
+```
+
+---
+
+## US06 — Desenvolvimento do frontend
+
+**Como usuário, quero acessar uma interface web para visualizar vagas e realizar os cadastros necessários, para utilizar o 8Jobs de forma simples e organizada.**
+
+**Dia:** 6
+
+**Páginas:**
+- Home;
+- Lista de vagas;
+- Detalhes da vaga;
+- Cadastro de empresa;
+- Cadastro de vaga;
+- Cadastro de candidato;
+- Lista de candidatos;
+- Formulário de candidatura.
+
+**Tecnologias:**
+- HTML;
+- CSS;
+- Skeleton CSS;
+- JavaScript.
+
+---
+
+## US07 — Integração do sistema
+
+**Como usuário, quero que o frontend se comunique com a API e os microserviços, para que minhas ações sejam processadas e armazenadas no MongoDB.**
+
+**Dia:** 7
+
+**Fluxo:**
+
+```text
+Frontend
+    ↓
+JavaScript / Fetch
+    ↓
+API
+    ↓
+Microserviços
+    ↓
+MongoDB
+```
+
+**Objetivo principal:**
+- Conectar frontend e backend;
+- Integrar os microserviços;
+- Integrar o MongoDB;
+- Implementar o fluxo completo de candidatura.
+
+---
+
+## US08 — Testes automatizados com Jest
+
+**Como desenvolvedor, quero criar testes automatizados para os serviços do sistema, para verificar se a API funciona corretamente e identificar possíveis erros.**
+
+**Dia:** 8
+
+**Testar:**
+- Empresas;
+- Vagas;
+- Candidatos;
+- Candidaturas;
+- Situações de erro.
+
+**Tecnologia:**
+
+```text
+Jest
+```
+
+---
+
+## US09 — Testes do sistema com Cypress
+
+**Como desenvolvedor, quero realizar testes de ponta a ponta simulando as ações de um usuário, para verificar o funcionamento do sistema desde o frontend até o banco de dados e corrigir problemas encontrados.**
+
+**Dia:** 9
+
+**Fluxo:**
+
+```text
+Usuário
+   ↓
+Frontend
+   ↓
+API
+   ↓
+Banco
+```
+
+**Testar principalmente:**
+- Navegação;
+- Consulta de vagas;
+- Seleção de vaga;
+- Formulário de candidatura;
+- Envio da candidatura;
+- Mensagens de sucesso;
+- Situações inválidas.
+
+**Tecnologia:**
+
+```text
+Cypress
+```
+
+---
+
+## US10 — Finalização e apresentação
+
+**Como equipe, queremos finalizar, revisar e apresentar o projeto, para demonstrar o funcionamento do 8Jobs, sua arquitetura, API, banco de dados, testes e decisões tomadas durante o desenvolvimento.**
+
+**Dia:** 10
+
+**Apresentar:**
+1. Arquitetura;
+2. Sistema;
+3. API;
+4. MongoDB;
+5. Testes Jest;
+6. Testes Cypress;
+7. Microserviços;
+8. Dificuldades e soluções.
