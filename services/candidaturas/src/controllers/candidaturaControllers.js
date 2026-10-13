@@ -1,158 +1,140 @@
-
- // Importa o modelo que permite acessar as candidaturas no MongoDB.
+// Importa o model da candidatura, que conversa com a collection "candidaturas" no MongoDB.
 const Candidatura = require('../models/candidaturaModel');
 
-// Lista todas as candidaturas cadastradas.
+// Importa os clientes que consultam os serviços de candidatos e de vagas.
+const { buscarCandidato, buscarVaga } = require('../clients/clienteHttp');
+
+// Converte cada tipo de erro no status HTTP correto.
+// Padrão de resposta de erro de todos os serviços: { erro: "mensagem" }
+const responderErro = (res, erro, mensagemPadrao) => {
+
+    // Algum dos outros serviços está fora do ar.
+    if (erro.name === 'ServicoIndisponivelError') {
+        return res.status(503).json({ erro: erro.message });
+    }
+
+    // Dado obrigatório faltando ou inválido.
+    if (erro.name === 'ValidationError') {
+        const mensagens = Object.values(erro.errors).map((e) => e.message);
+        return res.status(400).json({ erro: mensagens.join('; ') });
+    }
+
+    // Valor com tipo errado (por exemplo, um ID mal formado).
+    if (erro.name === 'CastError') {
+        const mensagem = erro.path === '_id'
+            ? 'ID inválido'
+            : `Valor inválido para o campo ${erro.path}`;
+        return res.status(400).json({ erro: mensagem });
+    }
+
+    // Código 11000 = candidatura repetida (mesmo candidato na mesma vaga).
+    if (erro.code === 11000) {
+        return res.status(409).json({ erro: 'Este candidato já se candidatou a esta vaga' });
+    }
+
+    console.error(erro);
+    return res.status(500).json({ erro: mensagemPadrao });
+};
+
+// GET /candidaturas
 const listarCandidaturas = async (req, res) => {
     try {
         const candidaturas = await Candidatura.find();
-
-        // Retorna a lista com status HTTP 200 (sucesso).
         return res.status(200).json(candidaturas);
-    } catch (error) {
-        // Informa um erro inesperado no servidor.
-        return res.status(500).json({
-            mensagem: 'Erro ao listar candidaturas.'
-        });
+    } catch (erro) {
+        return responderErro(res, erro, 'Erro ao listar candidaturas');
     }
 };
 
-// Consulta uma candidatura pelo ID.
+// GET /candidaturas/:id
 const consultarCandidatura = async (req, res) => {
     try {
-        // Obtém o ID informado na URL.
-        const { id } = req.params;
+        const candidatura = await Candidatura.findById(req.params.id);
 
-        const candidatura = await Candidatura.findById(id);
-
-        // Verifica se a candidatura existe.
         if (!candidatura) {
-            return res.status(404).json({
-                mensagem: 'Candidatura não encontrada.'
-            });
+            return res.status(404).json({ erro: 'Candidatura não encontrada' });
         }
 
         return res.status(200).json(candidatura);
-    } catch (error) {
-        // Um ID malformado pode causar erro no Mongoose.
-        if (error.name === 'CastError') {
-            return res.status(400).json({
-                mensagem: 'ID da candidatura inválido.'
-            });
-        }
-
-        return res.status(500).json({
-            mensagem: 'Erro ao consultar candidatura.'
-        });
+    } catch (erro) {
+        return responderErro(res, erro, 'Erro ao consultar candidatura');
     }
 };
 
-// Cadastra uma nova candidatura.
+// POST /candidaturas
+// Cria uma candidatura. O candidato e a vaga precisam existir, e a vaga precisa estar ABERTA.
 const cadastrarCandidatura = async (req, res) => {
     try {
-        // Obtém os dados enviados no corpo da requisição.
-        const { candidatoId, vagaId, status } = req.body;
+        const { candidatoId, vagaId } = req.body || {};
 
-        // Verifica se os campos obrigatórios foram informados.
         if (!candidatoId || !vagaId) {
-            return res.status(400).json({
-                mensagem: 'Informe o ID do candidato e o ID da vaga.'
-            });
+            return res.status(400).json({ erro: 'Informe o ID do candidato e o ID da vaga' });
         }
 
-        // Cria a candidatura; a data e o status têm valores padrão no modelo.
-        const candidatura = await Candidatura.create({
-            candidatoId,
-            vagaId,
-            ...(status && { status })
-        });
+        // Pergunta ao serviço de candidatos se o candidato existe.
+        const candidato = await buscarCandidato(candidatoId);
+        if (!candidato) {
+            return res.status(400).json({ erro: 'Candidato não encontrado' });
+        }
 
-        // Retorna a candidatura criada com status HTTP 201.
+        // Pergunta ao serviço de vagas se a vaga existe e está aberta.
+        const vaga = await buscarVaga(vagaId);
+        if (!vaga) {
+            return res.status(400).json({ erro: 'Vaga não encontrada' });
+        }
+        if (vaga.status !== 'ABERTA') {
+            return res.status(400).json({ erro: 'Esta vaga não está aberta para candidaturas' });
+        }
+
+        // O status inicial é sempre ENVIADA (definido no model).
+        const candidatura = await Candidatura.create({ candidatoId, vagaId });
         return res.status(201).json(candidatura);
-    } catch (error) {
-        // Trata dados que não respeitam as regras do modelo.
-        if (
-            error.name === 'ValidationError' ||
-            error.name === 'CastError'
-        ) {
-            return res.status(400).json({
-                mensagem: 'Dados da candidatura inválidos.'
-            });
-        }
-
-        return res.status(500).json({
-            mensagem: 'Erro ao cadastrar candidatura.'
-        });
+    } catch (erro) {
+        return responderErro(res, erro, 'Erro ao cadastrar candidatura');
     }
 };
 
-// Altera os dados de uma candidatura existente.
+// PUT /candidaturas/:id
+// Altera apenas o status da candidatura. O candidato e a vaga não mudam.
 const alterarCandidatura = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { status } = req.body || {};
 
-        // Atualiza os campos enviados e aplica as validações do modelo.
+        if (!status) {
+            return res.status(400).json({ erro: 'Informe o novo status da candidatura' });
+        }
+
         const candidatura = await Candidatura.findByIdAndUpdate(
-            id,
-            req.body,
-            {
-                new: true,
-                runValidators: true
-            }
+            req.params.id,
+            { status },
+            { new: true, runValidators: true }
         );
 
         if (!candidatura) {
-            return res.status(404).json({
-                mensagem: 'Candidatura não encontrada.'
-            });
+            return res.status(404).json({ erro: 'Candidatura não encontrada' });
         }
 
         return res.status(200).json(candidatura);
-    } catch (error) {
-        if (
-            error.name === 'ValidationError' ||
-            error.name === 'CastError'
-        ) {
-            return res.status(400).json({
-                mensagem: 'Dados inválidos para alteração.'
-            });
-        }
-
-        return res.status(500).json({
-            mensagem: 'Erro ao alterar candidatura.'
-        });
+    } catch (erro) {
+        return responderErro(res, erro, 'Erro ao alterar candidatura');
     }
 };
 
-// Exclui uma candidatura pelo ID.
+// DELETE /candidaturas/:id
 const excluirCandidatura = async (req, res) => {
     try {
-        const { id } = req.params;
-
-        const candidatura = await Candidatura.findByIdAndDelete(id);
+        const candidatura = await Candidatura.findByIdAndDelete(req.params.id);
 
         if (!candidatura) {
-            return res.status(404).json({
-                mensagem: 'Candidatura não encontrada.'
-            });
+            return res.status(404).json({ erro: 'Candidatura não encontrada' });
         }
 
-        // HTTP 204 indica que a exclusão ocorreu sem precisar retornar conteúdo.
-        return res.status(204).send();
-    } catch (error) {
-        if (error.name === 'CastError') {
-            return res.status(400).json({
-                mensagem: 'ID da candidatura inválido.'
-            });
-        }
-
-        return res.status(500).json({
-            mensagem: 'Erro ao excluir candidatura.'
-        });
+        return res.status(200).json({ mensagem: 'Candidatura excluída com sucesso' });
+    } catch (erro) {
+        return responderErro(res, erro, 'Erro ao excluir candidatura');
     }
 };
 
-// Exporta as funções para que o arquivo de rotas possa utilizá-las.
 module.exports = {
     listarCandidaturas,
     consultarCandidatura,

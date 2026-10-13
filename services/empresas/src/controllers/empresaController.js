@@ -1,153 +1,110 @@
-// Importa o Model Empresa.
-// É através dele que o Controller conversa com o MongoDB.
+// Importa o model da empresa, que conversa com a collection "empresas" no MongoDB.
 const Empresa = require('../models/empresaModel');
 
+// Converte cada tipo de erro no status HTTP correto.
+// Padrão de resposta de erro de todos os serviços: { erro: "mensagem" }
+const responderErro = (res, erro, mensagemPadrao) => {
+
+    // Dado obrigatório faltando ou inválido.
+    if (erro.name === 'ValidationError') {
+        const mensagens = Object.values(erro.errors).map((e) => e.message);
+        return res.status(400).json({ erro: mensagens.join('; ') });
+    }
+
+    // Valor com tipo errado (por exemplo, um ID mal formado).
+    if (erro.name === 'CastError') {
+        const mensagem = erro.path === '_id'
+            ? 'ID inválido'
+            : `Valor inválido para o campo ${erro.path}`;
+        return res.status(400).json({ erro: mensagem });
+    }
+
+    // Código 11000 = valor duplicado em um campo único (ex.: CNPJ).
+    if (erro.code === 11000) {
+        const campo = Object.keys(erro.keyPattern || {})[0] || 'campo';
+        return res.status(409).json({ erro: `Já existe uma empresa com este ${campo}` });
+    }
+
+    console.error(erro);
+    return res.status(500).json({ erro: mensagemPadrao });
+};
 
 // GET /empresas
-// Lista todas as empresas cadastradas.
+// Retorna todas as empresas cadastradas.
 const listarEmpresas = async (req, res) => {
     try {
-        // Busca todas as empresas no banco de dados.
         const empresas = await Empresa.find();
-
-        // Retorna as empresas encontradas em formato JSON.
         res.status(200).json(empresas);
-
-    } catch (error) {
-        // Caso aconteça algum erro, retorna status 500.
-        res.status(500).json({
-            mensagem: 'Erro ao listar empresas',
-            erro: error.message
-        });
+    } catch (erro) {
+        responderErro(res, erro, 'Erro ao listar empresas');
     }
 };
-
 
 // GET /empresas/:id
-// Consulta uma empresa específica pelo ID.
+// Retorna uma empresa específica pelo ID.
 const consultarEmpresa = async (req, res) => {
     try {
-        // Pega o ID que veio na URL.
-        // Exemplo: /empresas/123 -> req.params.id = 123
-        const { id } = req.params;
+        const empresa = await Empresa.findById(req.params.id);
 
-        // Procura a empresa pelo ID no MongoDB.
-        const empresa = await Empresa.findById(id);
-
-        // Se não encontrou nenhuma empresa, retorna 404.
         if (!empresa) {
-            return res.status(404).json({
-                mensagem: 'Empresa não encontrada'
-            });
+            return res.status(404).json({ erro: 'Empresa não encontrada' });
         }
 
-        // Retorna a empresa encontrada.
         res.status(200).json(empresa);
-
-    } catch (error) {
-        // Erro ao consultar o banco.
-        res.status(500).json({
-            mensagem: 'Erro ao consultar empresa',
-            erro: error.message
-        });
+    } catch (erro) {
+        responderErro(res, erro, 'Erro ao consultar empresa');
     }
 };
-
 
 // POST /empresas
 // Cadastra uma nova empresa.
 const cadastrarEmpresa = async (req, res) => {
     try {
-        // req.body contém os dados enviados pelo cliente.
-        // Exemplo:
-        // {
-        //     "nome": "Empresa ABC",
-        //     "cnpj": "12345678000100",
-        //     "email": "contato@abc.com"
-        // }
-
         const empresa = await Empresa.create(req.body);
-
-        // 201 significa que um novo recurso foi criado.
         res.status(201).json(empresa);
-
-    } catch (error) {
-        // Erro ao cadastrar a empresa.
-        res.status(500).json({
-            mensagem: 'Erro ao cadastrar empresa',
-            erro: error.message
-        });
+    } catch (erro) {
+        responderErro(res, erro, 'Erro ao cadastrar empresa');
     }
 };
-
 
 // PUT /empresas/:id
-// Altera uma empresa existente.
+// Altera os dados de uma empresa.
 const alterarEmpresa = async (req, res) => {
     try {
-        // Pega o ID da empresa na URL.
-        const { id } = req.params;
-
-        // Procura a empresa pelo ID e atualiza com os dados enviados.
-        // { new: true } faz o Mongoose retornar a empresa já atualizada.
+        // new: true devolve a empresa já atualizada.
+        // runValidators: true aplica as validações do model também na alteração.
         const empresa = await Empresa.findByIdAndUpdate(
-            id,
+            req.params.id,
             req.body,
-            { new: true }
+            { new: true, runValidators: true }
         );
 
-        // Se a empresa não existir, retorna 404.
         if (!empresa) {
-            return res.status(404).json({
-                mensagem: 'Empresa não encontrada'
-            });
+            return res.status(404).json({ erro: 'Empresa não encontrada' });
         }
 
-        // Retorna a empresa atualizada.
         res.status(200).json(empresa);
-
-    } catch (error) {
-        // Erro ao alterar a empresa.
-        res.status(500).json({
-            mensagem: 'Erro ao alterar empresa',
-            erro: error.message
-        });
+    } catch (erro) {
+        responderErro(res, erro, 'Erro ao alterar empresa');
     }
 };
-
 
 // DELETE /empresas/:id
-// Exclui uma empresa pelo ID.
+// Exclui uma empresa.
 const excluirEmpresa = async (req, res) => {
     try {
-        // Pega o ID da empresa na URL.
-        const { id } = req.params;
+        const empresa = await Empresa.findByIdAndDelete(req.params.id);
 
-        // Procura e exclui a empresa.
-        const empresa = await Empresa.findByIdAndDelete(id);
-
-        // Se não encontrou a empresa, retorna 404.
         if (!empresa) {
-            return res.status(404).json({
-                mensagem: 'Empresa não encontrada'
-            });
+            return res.status(404).json({ erro: 'Empresa não encontrada' });
         }
 
-        // 204 significa que a operação foi realizada
-        // e não há conteúdo para retornar.
-        res.status(204).send();
-
-    } catch (error) {
-        // Erro ao excluir a empresa.
-        res.status(500).json({
-            mensagem: 'Erro ao excluir empresa',
-            erro: error.message
-        });
+        res.status(200).json({ mensagem: 'Empresa excluída com sucesso' });
+    } catch (erro) {
+        responderErro(res, erro, 'Erro ao excluir empresa');
     }
 };
 
-
-// Exporta todas as funções para que possam ser utilizadas pelas Routes.
 module.exports = {
     listarEmpresas,
     consultarEmpresa,

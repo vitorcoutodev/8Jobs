@@ -1,35 +1,44 @@
+// Importa o Mongoose, que usamos para definir a estrutura dos documentos.
 const mongoose = require('mongoose');
 
-// Define a estrutura dos documentos da coleção de empresas.
+// Expressão simples para conferir se o e-mail tem o formato nome@dominio.com
+const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Schema = "molde" de uma empresa. Define os campos, os tipos e as validações.
 const empresaSchema = new mongoose.Schema(
     {
         nome: {
-            type: String
+            type: String,
+            required: [true, 'O nome é obrigatório'],
+            trim: true
         },
-
         cnpj: {
             type: String,
-            required: true, // O CNPJ é obrigatório.
-            unique: true    // Impede CNPJs duplicados.
+            required: [true, 'O CNPJ é obrigatório'],
+            unique: true, // Impede CNPJs duplicados.
+            trim: true
         },
-
         email: {
-            type: String
+            type: String,
+            required: [true, 'O e-mail é obrigatório'],
+            trim: true,
+            lowercase: true,
+            match: [emailValido, 'E-mail inválido']
         },
-
         telefone: {
-            type: String
+            type: String,
+            trim: true
         },
-
         cidade: {
             type: String,
-            required: true // A cidade é obrigatória.
+            required: [true, 'A cidade é obrigatória'],
+            trim: true
         }
     },
     {
-        timestamps: true // Cria automaticamente createdAt e updatedAt.
+        // Cria automaticamente os campos createdAt e updatedAt.
+        timestamps: true
     }
 );
 
-// Cria e exporta o modelo Empresa para uso nos controllers.
 module.exports = mongoose.model('Empresa', empresaSchema);

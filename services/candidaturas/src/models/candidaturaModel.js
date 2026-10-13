@@ -1,40 +1,37 @@
-// Importa o Mongoose para definir o modelo da candidatura.
+// Importa o Mongoose, que usamos para definir a estrutura dos documentos.
 const mongoose = require('mongoose');
 
-// Define os campos e as regras de cada candidatura.
-const candidaturaSchema = new mongoose.Schema({
-    // ID do candidato que está se inscrevendo.
-    candidatoId: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: [true, 'O ID do candidato é obrigatório']
+// Schema = "molde" de uma candidatura (liga um candidato a uma vaga).
+const candidaturaSchema = new mongoose.Schema(
+    {
+        candidatoId: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: [true, 'O ID do candidato é obrigatório']
+        },
+        vagaId: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: [true, 'O ID da vaga é obrigatório']
+        },
+        data: {
+            type: Date,
+            default: Date.now
+        },
+        status: {
+            type: String,
+            enum: {
+                values: ['ENVIADA', 'EM_ANALISE', 'APROVADA', 'REJEITADA'],
+                message: 'Status deve ser ENVIADA, EM_ANALISE, APROVADA ou REJEITADA'
+            },
+            default: 'ENVIADA'
+        }
     },
-
-    // ID da vaga para a qual o candidato se inscreveu.
-    vagaId: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: [true, 'O ID da vaga é obrigatório']
-    },
-
-    // Data em que a candidatura foi registrada.
-    data: {
-        type: Date,
-        default: Date.now
-    },
-
-    // Situação atual da candidatura no processo seletivo.
-    status: {
-        type: String,
-        enum: ['ENVIADA', 'EM_ANALISE', 'APROVADA', 'REJEITADA'],
-        default: 'ENVIADA',
-        required: [true, 'O status da candidatura é obrigatório']
+    {
+        // Cria automaticamente os campos createdAt e updatedAt.
+        timestamps: true
     }
-}, {
-    // Cria automaticamente os campos createdAt e updatedAt.
-    timestamps: true
-});
+);
 
-// Cria o modelo que permitirá consultar e modificar candidaturas.
-const Candidatura = mongoose.model('Candidatura', candidaturaSchema);
+// Um candidato só pode se candidatar uma vez a cada vaga.
+candidaturaSchema.index({ candidatoId: 1, vagaId: 1 }, { unique: true });
 
-// Exporta o modelo para ser usado pelo controller.
-module.exports = Candidatura;
+module.exports = mongoose.model('Candidatura', candidaturaSchema);

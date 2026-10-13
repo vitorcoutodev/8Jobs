@@ -1,28 +1,22 @@
-// Importa o Express.
-const express = require("express");
-const { ObjectId } = require("mongodb");
+// Carrega as variáveis do arquivo .env (MONGODB_URI e PORT) para process.env.
+// Precisa ser a primeira coisa do arquivo, antes de usar process.env.
+require('dotenv').config();
 
-// Importa nossa função de conexão com o MongoDB.
-const conectarBanco = require("./src/config/database.js");
+// Importa a aplicação Express (configurada em src/app.js, com as rotas de empresas).
+const app = require('./src/app');
 
-// Cria a aplicação Express.
-const app = express();
+// Importa a função que conecta ao MongoDB (src/config/database.js).
+const conectarBanco = require('./src/config/database');
 
-// Define a porta do servidor.
-const PORTA = 3001;
+// Porta definida no .env. Se não existir, usa 3001.
+const PORT = process.env.PORT || 3001;
 
-app.get('/', (req, res) => {
+// Primeiro conecta ao banco, e só depois sobe o servidor.
+// Se a conexão falhar, o database.js encerra o programa com process.exit(1).
+conectarBanco().then(() => {
 
-    // Envia uma resposta no formato JSON informando que a API está funcionando.
-    res.json({
-        mensagem: 'API empresas 8Jobs funcionando!'
+    // Inicia o servidor e fica esperando requisições na porta definida.
+    app.listen(PORT, () => {
+        console.log(`Serviço de empresas rodando em http://localhost:${PORT}`);
     });
-});
-
-// Permite que o Express receba dados em JSON.
-app.use(express.json());
-
-// Inicia o servidor.
-app.listen(PORTA, () => {
-    console.log(`Servidor rodando em http://localhost:${PORTA}`);
 });

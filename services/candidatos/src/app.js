@@ -7,6 +7,9 @@
  // Importa o Express.
 const express = require('express');
 
+// Libera o acesso ao serviço pelo frontend (que roda em outra porta).
+const cors = require('cors');
+
 // Importa as rotas de candidatos.
 const candidatoRoutes = require('./routes/candidatoRoutes');
 
@@ -14,6 +17,8 @@ const candidatoRoutes = require('./routes/candidatoRoutes');
 const app = express();
 
 // Permite receber dados em formato JSON.
+app.use(cors());
+
 app.use(express.json());
 
 // Define as rotas de candidatos.

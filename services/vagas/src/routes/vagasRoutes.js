@@ -2,8 +2,7 @@
 const express = require('express');
 
 // Importa as funções do controller.
-// Ajuste o nome do arquivo para o que você realmente usou.
-const vagaController = require('../controllers/vagaController');
+const vagaController = require('../controllers/vagasControllers');
 
 // Cria o roteador.
 const router = express.Router();

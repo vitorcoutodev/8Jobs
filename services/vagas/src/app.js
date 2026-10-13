@@ -1,13 +1,18 @@
 // Importa o Express.
 const express = require('express');
 
+// Libera o acesso ao serviço pelo frontend (que roda em outra porta).
+const cors = require('cors');
+
 // Importa as rotas de vagas.
-const vagaRoutes = require('./routes/vagaRoutes');
+const vagaRoutes = require('./routes/vagasRoutes');
 
 // Cria a aplicação Express.
 const app = express();
 
 // Permite que o Express leia o corpo das requisições em JSON (req.body).
+app.use(cors());
+
 app.use(express.json());
 
 // Rota simples para verificar se o serviço está no ar.
