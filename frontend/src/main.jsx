@@ -1,3 +1,4 @@
+// ponto de entrada do React. Encontra o elemento root e renderiza o componente App.
 // Importa o React para disponibilizar a API de componentes e o modo estrito.
 import React from 'react'
 // Importa a função que conecta a aplicação React ao elemento HTML raiz.

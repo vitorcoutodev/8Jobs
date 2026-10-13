@@ -1,3 +1,4 @@
+// contém a Home, incluindo cabeçalho, busca, cartões de vagas, área para empresas e rodapé. O array jobs contém quatro vagas fictícias.
 // Importa dois recursos do React: useState guarda dados que mudam na tela; useMemo memoriza um resultado calculado.
 import { useMemo, useState } from 'react'
 
@@ -27,7 +28,7 @@ function Mark() {
 
 
 
-// Componente de cartão. O parâmetro { job } recebe, via props, um objeto de vaga enviado por quem usa <JobCard />.
+// Componente de cartão que apresenta uma vaga. O parâmetro { job } recebe, via props, um objeto de vaga enviado por quem usa <JobCard />.
 function JobCard({ job }) {
 
   return (

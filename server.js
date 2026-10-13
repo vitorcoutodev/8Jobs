@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
 
     // Envia uma resposta no formato JSON informando que a API está funcionando.
     res.json({
-        mensagem: 'API 8Jobs funcionando!'
+        mensagem: 'API GATEWAY 8Jobs funcionando!'
     });
 });
 
@@ -27,5 +27,5 @@ const PORT = 3000;
 app.listen(PORT, () => {
 
     // Exibe uma mensagem no terminal confirmando que o Gateway está ativo.
-    console.log(`Seu site esta nesse link http://localhost:${PORT}`);
+    console.log(`Gateway 8Jobs rodando na porta ${PORT}`);
 });

@@ -13,7 +13,6 @@
   "dependencies": {
     "dotenv": "^18.0.7",
     "express": "^5.3.0",
-    "mogoose": "^0.0.1-security",
     "mongoose": "^9.11.1"
   }
 }
