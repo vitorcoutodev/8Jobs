@@ -1,5 +1,5 @@
 // Importa o model da vaga, que é quem conversa com a collection "vagas" no MongoDB.
-const Vaga = require('../models/vagaModel');
+const Vaga = require('../models/vagasModel');
 
 // GET /vagas
 // Retorna todas as vagas cadastradas.
