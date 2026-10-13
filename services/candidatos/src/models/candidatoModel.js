@@ -1,4 +1,8 @@
-// Importa o Mongoose, que usamos para definir a estrutura dos documentos.
+//Schema: define os campos e as regras dos dados.
+//required: true: torna o campo obrigatório.
+//unique: true: impede que dois candidatos tenham o mesmo e-mail no índice do MongoDB.
+//type: [String]: permite armazenar várias habilidades, como ["JavaScript", "Node.js"].
+//mongoose.model(...): cria o modelo que usaremos para consultar e modificar candidatos.// Importa o Mongoose, que usamos para definir a estrutura dos documentos.
 const mongoose = require('mongoose');
 
 // Expressão simples para conferir se o e-mail tem o formato nome@dominio.com
