@@ -27,5 +27,5 @@ const PORT = 3000;
 app.listen(PORT, () => {
 
     // Exibe uma mensagem no terminal confirmando que o Gateway está ativo.
-    console.log(`Gateway 8Jobs rodando na porta ${PORT}`);
+    console.log(`Seu site esta nesse link http://localhost:${PORT}`);
 });
