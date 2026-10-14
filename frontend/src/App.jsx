@@ -1,11 +1,11 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+// Importa as páginas da aplicação.
+import Home from './pages/home.jsx';
 import CadastroEmpresa from './pages/cadastroEmpresa.jsx';
 import CadastroCandidato from './pages/cadastroCandidato.jsx';
 import ListarCandidatos from './pages/listarCandidatos.jsx';
-
-// Importa as duas páginas da aplicação.
-import Home from './pages/home.jsx';
-import ListarVagas from './pages/ListarVagas.jsx';
+import ListarVagas from './pages/listarVagas.jsx';
 
 export default function App() {
   return (
