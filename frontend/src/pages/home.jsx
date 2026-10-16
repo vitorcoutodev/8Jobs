@@ -328,9 +328,8 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Destino provisório até a criação da página de empresas. */}
             <Link
-              to="/empresas"
+              to="/cadastro-empresa"
               className="shrink-0 rounded-xl bg-[#102b25] px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-900"
             >
               Conheça o 8Jobs para empresas{' '}

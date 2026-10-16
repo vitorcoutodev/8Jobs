@@ -29,23 +29,15 @@ export default function Navbar() {
             Vagas
           </NavLink>
 
-          {/* Estas rotas poderão ser criadas futuramente. */}
-          <Link to="/empresas" className={linkClass}>
-            Empresas
+          <Link to="/cadastro-empresa" className={linkClass}>
+            Cadastrar empresa
           </Link>
         </div>
 
         {/* Ações de acesso à plataforma. */}
         <div className="flex items-center gap-3">
           <Link
-            to="/login"
-            className="hidden text-sm font-semibold text-slate-700 transition hover:text-emerald-700 sm:inline"
-          >
-            Entrar
-          </Link>
-
-          <Link
-            to="/cadastro"
+            to="/cadastro-candidato"
             className="rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600"
           >
             Criar conta

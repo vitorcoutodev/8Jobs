@@ -1,6 +1,6 @@
 // Carrega as variáveis do arquivo .env para process.env.
 // Precisa ser a primeira coisa do arquivo, antes de usar process.env.
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 // Importa a aplicação Express (configurada no app.js).
 const app = require('./src/app');

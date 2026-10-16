@@ -4,6 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start:gateway": "node server.js",
+    "start:empresas": "node services/empresas/server.js",
+    "start:vagas": "node services/vagas/server.js",
+    "start:candidatos": "node services/candidatos/server.js",
+    "start:candidaturas": "node services/candidaturas/server.js",
+    "dev:frontend": "npm --prefix frontend run dev",
     "test": "jest"
   },
   "keywords": [],

@@ -371,3 +371,23 @@ POrta do server Mongo 20717:
 Os dados serão armazenados no MongoDB.
 
 ##
+
+# Execução do fluxo integrado (Dia 7)
+
+O front-end envia as chamadas para o gateway em `http://localhost:3000/api`. O gateway encaminha cada recurso para o seu microserviço:
+
+| Recurso público | Serviço | Porta padrão |
+| --- | --- | ---: |
+| `/api/empresas` | Empresas | 3001 |
+| `/api/vagas` | Vagas | 3002 |
+| `/api/candidatos` | Candidatos | 3003 |
+| `/api/candidaturas` | Candidaturas | 3004 |
+
+Cada microserviço grava seus documentos no MongoDB configurado por `MONGODB_URI`. Para desenvolvimento local, os arquivos `.env.example` apontam para `mongodb://localhost:27017/8jobs`.
+
+1. Inicie o MongoDB localmente.
+2. Copie `.env.example` para `.env` na raiz e copie o `.env.example` de cada pasta em `services/` para `.env` naquela mesma pasta.
+3. Instale as dependências na raiz, no front-end e em cada serviço: `npm install` e `npm --prefix frontend install`, `npm --prefix services/empresas install`, `npm --prefix services/vagas install`, `npm --prefix services/candidatos install` e `npm --prefix services/candidaturas install`.
+4. Em terminais separados, execute na raiz: `npm run start:gateway`, `npm run start:empresas`, `npm run start:vagas`, `npm run start:candidatos`, `npm run start:candidaturas` e `npm run dev:frontend`.
+
+No fluxo de candidatura, o formulário cria ou reaproveita o candidato durante a tentativa, envia `candidatoId` e `vagaId` ao serviço de candidaturas, e esse serviço confirma que ambos existem e que a vaga está aberta antes de persistir o vínculo no MongoDB.

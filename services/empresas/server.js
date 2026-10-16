@@ -1,6 +1,6 @@
 // Carrega as variáveis do arquivo .env (MONGODB_URI e PORT) para process.env.
 // Precisa ser a primeira coisa do arquivo, antes de usar process.env.
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 // Importa a aplicação Express (configurada em src/app.js, com as rotas de empresas).
 const app = require('./src/app');

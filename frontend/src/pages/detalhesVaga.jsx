@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 // Importa o serviço usado para consultar as vagas da API.
-import { listarVagas } from '../services/vagasService.js';
+import { buscarVaga } from '../services/vagasService.js';
 
 // Importa os componentes compartilhados da interface.
 import Navbar from '../components/navBar.jsx';
@@ -28,20 +28,7 @@ export default function DetalhesVaga() {
         setCarregando(true);
         setErro('');
 
-        // Consulta a lista de vagas pela função existente no serviço.
-        const dados = await listarVagas();
-
-        // Aceita uma lista direta ou uma resposta com a propriedade vagas.
-        const lista = Array.isArray(dados)
-          ? dados
-          : Array.isArray(dados.vagas)
-            ? dados.vagas
-            : [];
-
-        // Localiza a vaga cujo ID corresponde ao parâmetro da URL.
-        const resultado = lista.find(
-          (item) => String(item._id || item.id) === String(id)
-        );
+        const resultado = await buscarVaga(id);
 
         // Informa quando o ID não corresponde a nenhuma vaga.
         if (!resultado) {
@@ -193,7 +180,7 @@ export default function DetalhesVaga() {
               <div className="border-t border-slate-100 pt-6">
                 <p className="text-sm text-slate-500">Gostou da oportunidade?</p>
                 <Link
-                  to={`/candidatura/${vaga._id || vaga.id}`}
+                  to={`/formulario?vagaId=${encodeURIComponent(vaga._id || vaga.id)}`}
                   className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-emerald-500 px-6 py-3.5 text-sm font-bold text-[#102b25] transition hover:bg-emerald-400 sm:w-auto"
                 >
                   Candidatar-se à vaga

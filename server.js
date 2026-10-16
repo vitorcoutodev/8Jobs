@@ -1,31 +1,75 @@
-// Importa a biblioteca Express, que facilita a criação de servidores e rotas HTTP.
+require('dotenv').config();
+
 const express = require('express');
 
-// Cria a aplicação Express, que será responsável por receber e responder às requisições.
 const app = express();
+app.use(express.json({ limit: '1mb' }));
 
-// Configura o Express para interpretar requisições que enviam dados no formato JSON.
-// Assim, podemos acessar esses dados por meio de req.body.
-app.use(express.json());
+const servicos = {
+    empresas: process.env.EMPRESAS_URL || 'http://localhost:3001',
+    vagas: process.env.VAGAS_URL || 'http://localhost:3002',
+    candidatos: process.env.CANDIDATOS_URL || 'http://localhost:3003',
+    candidaturas: process.env.CANDIDATURAS_URL || 'http://localhost:3004'
+};
 
-// Cria a rota inicial (/) utilizando o método GET.
-// Ela serve para verificar se o Gateway está funcionando.
-// req representa a requisição recebida e res representa a resposta enviada.
-app.get('/', (req, res) => {
+// O front-end (Vite) roda em outra porta durante o desenvolvimento.
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', process.env.FRONTEND_ORIGIN || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
 
-    // Envia uma resposta no formato JSON informando que a API está funcionando.
-    res.json({
-        mensagem: 'API GATEWAY 8Jobs funcionando!'
-    });
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    next();
 });
 
-// Define a porta 3000, que será utilizada pelo servidor para receber requisições.
-const PORT = 3000;
+app.get('/', (req, res) => {
+    res.json({ mensagem: 'API Gateway 8Jobs funcionando!' });
+});
 
-// Inicia o servidor Express na porta definida.
-// A função de callback é executada quando o servidor começa a funcionar.
+// Encaminha /api/<servico>/... ao microserviço correspondente.
+app.use('/api', async (req, res) => {
+    const caminho = req.originalUrl.replace(/^\/api/, '');
+    const nomeServico = caminho.split('/').filter(Boolean)[0];
+    const baseUrl = servicos[nomeServico];
+
+    if (!baseUrl) {
+        return res.status(404).json({ erro: 'Microserviço não encontrado' });
+    }
+
+    try {
+        const opcoes = {
+            method: req.method,
+            headers: {
+                accept: req.headers.accept || 'application/json',
+                ...(req.headers.authorization ? { authorization: req.headers.authorization } : {})
+            },
+            signal: AbortSignal.timeout(15000)
+        };
+
+        if (req.body !== undefined && !['GET', 'HEAD'].includes(req.method)) {
+            opcoes.headers['content-type'] = req.headers['content-type'] || 'application/json';
+            opcoes.body = JSON.stringify(req.body);
+        }
+
+        const resposta = await fetch(`${baseUrl.replace(/\/$/, '')}${caminho}`, opcoes);
+        const conteudo = await resposta.text();
+
+        res.status(resposta.status);
+        const tipoConteudo = resposta.headers.get('content-type');
+        if (tipoConteudo) res.setHeader('Content-Type', tipoConteudo);
+        if (resposta.status === 204 || resposta.status === 304) return res.end();
+        return res.send(conteudo);
+    } catch (erro) {
+        const expirou = erro.name === 'TimeoutError' || erro.name === 'AbortError';
+        return res.status(expirou ? 504 : 503).json({
+            erro: expirou
+                ? `Tempo limite ao aguardar o serviço de ${nomeServico}`
+                : `Serviço de ${nomeServico} indisponível`
+        });
+    }
+});
+
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-
-    // Exibe uma mensagem no terminal confirmando que o Gateway está ativo.
-    console.log(`Gateway 8Jobs rodando na porta ${PORT}`);
+    console.log(`Gateway 8Jobs rodando em http://localhost:${PORT}`);
 });

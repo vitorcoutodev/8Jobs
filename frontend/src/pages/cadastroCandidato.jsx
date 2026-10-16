@@ -11,10 +11,10 @@ export default function CadastroCandidato() {
   // Guarda as informações preenchidas pelo candidato.
   const [formulario, setFormulario] = useState({
     nome: '',
-    cpf: '',
     email: '',
     telefone: '',
-    areaInteresse: '',
+    cidade: '',
+    habilidades: '',
   });
 
   // Controla o envio e as mensagens do formulário.
@@ -41,17 +41,20 @@ export default function CadastroCandidato() {
 
     try {
       // Executa a função de cadastro do candidatosService.js.
-      await cadastrarCandidato(formulario);
+      await cadastrarCandidato({
+        ...formulario,
+        habilidades: formulario.habilidades.split(',').map((item) => item.trim()).filter(Boolean),
+      });
 
       setSucesso('Candidato cadastrado com sucesso!');
 
       // Limpa os campos após o cadastro.
       setFormulario({
         nome: '',
-        cpf: '',
         email: '',
         telefone: '',
-        areaInteresse: '',
+        cidade: '',
+        habilidades: '',
       });
 
       // Volta à página inicial após uma breve confirmação.
@@ -121,22 +124,6 @@ export default function CadastroCandidato() {
           </div>
 
           <div>
-            <label htmlFor="cpf" className="mb-1.5 block text-sm font-semibold">
-              CPF
-            </label>
-            <input
-              id="cpf"
-              name="cpf"
-              value={formulario.cpf}
-              onChange={handleChange}
-              required
-              autoComplete="off"
-              placeholder="000.000.000-00"
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500"
-            />
-          </div>
-
-          <div>
             <label htmlFor="email" className="mb-1.5 block text-sm font-semibold">
               E-mail
             </label>
@@ -171,28 +158,34 @@ export default function CadastroCandidato() {
           </div>
 
           <div>
-            <label
-              htmlFor="areaInteresse"
-              className="mb-1.5 block text-sm font-semibold"
-            >
-              Área de interesse
+            <label htmlFor="cidade" className="mb-1.5 block text-sm font-semibold">
+              Cidade
             </label>
-            <select
-              id="areaInteresse"
-              name="areaInteresse"
-              value={formulario.areaInteresse}
+            <input
+              id="cidade"
+              name="cidade"
+              value={formulario.cidade}
               onChange={handleChange}
               required
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-500"
-            >
-              <option value="">Selecione uma área</option>
-              <option value="Tecnologia">Tecnologia</option>
-              <option value="Administrativo">Administrativo</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Vendas">Vendas</option>
-              <option value="Design">Design</option>
-              <option value="Outro">Outro</option>
-            </select>
+              autoComplete="address-level2"
+              placeholder="Ex.: São Paulo"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="habilidades" className="mb-1.5 block text-sm font-semibold">
+              Habilidades (opcional)
+            </label>
+            <input
+              id="habilidades"
+              name="habilidades"
+              value={formulario.habilidades}
+              onChange={handleChange}
+              placeholder="Ex.: JavaScript, atendimento, vendas"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500"
+            />
+            <span className="mt-1.5 block text-xs text-slate-500">Separe as habilidades por vírgula.</span>
           </div>
 
           {/* Mensagens de retorno da API. */}

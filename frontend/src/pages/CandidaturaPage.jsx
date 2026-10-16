@@ -2,35 +2,13 @@
 // A pessoa preenche seus dados, escolhe uma vaga aberta e envia.
 // Ao enviar, a página cria o candidato (serviço de candidatos) e depois a candidatura (serviço de candidaturas).
 import { useEffect, useState } from 'react'
-
-// Endereços dos microserviços. O gateway (porta 3000) ainda não encaminha chamadas,
-// então a página fala direto com cada serviço. O CORS já está liberado nos três.
-const VAGAS_URL = 'http://localhost:3002'
-const CANDIDATOS_URL = 'http://localhost:3003'
-const CANDIDATURAS_URL = 'http://localhost:3004'
+import { useSearchParams } from 'react-router-dom'
+import { listarVagas } from '../services/vagasService.js'
+import { cadastrarCandidato } from '../services/candidatosService.js'
+import { cadastrarCandidatura } from '../services/candidaturasService.js'
 
 // Valores iniciais do formulário. habilidades é digitada separada por vírgula.
 const formInicial = { nome: '', email: '', telefone: '', cidade: '', habilidades: '', vagaId: '' }
-
-// Faz a chamada HTTP e devolve o JSON.
-// Se a API responder com erro, lança um Error com a mensagem que ela mandou ({ erro: "..." }).
-// Se a API estiver fora do ar, o fetch falha e mostramos uma mensagem clara.
-async function requisitar(url, opcoes) {
-  let resposta
-  try {
-    resposta = await fetch(url, opcoes)
-  } catch {
-    throw new Error('Não foi possível conectar ao servidor. Verifique se os serviços estão no ar.')
-  }
-
-  const dados = await resposta.json().catch(() => ({}))
-
-  if (!resposta.ok) {
-    throw new Error(dados.erro || 'Algo deu errado. Tente novamente.')
-  }
-
-  return dados
-}
 
 // Campo de texto reutilizável: rótulo em cima, input embaixo.
 function Campo({ rotulo, nome, valor, aoMudar, tipo = 'text', obrigatorio = false, dica, placeholder }) {
@@ -52,13 +30,17 @@ function Campo({ rotulo, nome, valor, aoMudar, tipo = 'text', obrigatorio = fals
 }
 
 export default function CandidaturaPage() {
+  const [searchParams] = useSearchParams()
   // Vagas abertas que aparecem no seletor.
   const [vagas, setVagas] = useState([])
   const [carregandoVagas, setCarregandoVagas] = useState(true)
   const [erroVagas, setErroVagas] = useState('')
 
   // Dados digitados no formulário.
-  const [form, setForm] = useState(formInicial)
+  const [form, setForm] = useState(() => ({
+    ...formInicial,
+    vagaId: searchParams.get('vagaId') || '',
+  }))
 
   // Estado do envio: enviando, mensagem de erro, se já foi enviada e qual vaga foi escolhida.
   const [enviando, setEnviando] = useState(false)
@@ -74,7 +56,7 @@ export default function CandidaturaPage() {
   useEffect(() => {
     let ativo = true
 
-    requisitar(`${VAGAS_URL}/vagas`)
+    listarVagas()
       .then((lista) => {
         if (ativo) setVagas(lista.filter((vaga) => vaga.status === 'ABERTA'))
       })
@@ -112,28 +94,20 @@ export default function CandidaturaPage() {
 
       // 1) Cria o candidato, a não ser que ele já tenha sido criado em uma tentativa anterior.
       if (!id) {
-        const candidato = await requisitar(`${CANDIDATOS_URL}/candidatos`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        const candidato = await cadastrarCandidato({
             nome: form.nome,
             email: form.email,
             telefone: form.telefone,
             cidade: form.cidade,
             // "react, node" vira ["react", "node"], sem itens vazios.
             habilidades: form.habilidades.split(',').map((h) => h.trim()).filter(Boolean),
-          }),
         })
         id = candidato._id
         setCandidatoId(id)
       }
 
       // 2) Cria a candidatura ligando o candidato à vaga escolhida.
-      await requisitar(`${CANDIDATURAS_URL}/candidaturas`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ candidatoId: id, vagaId: form.vagaId }),
-      })
+      await cadastrarCandidatura({ candidatoId: id, vagaId: form.vagaId })
 
       // Guarda a vaga escolhida para mostrar na confirmação.
       setVagaEscolhida(vagas.find((vaga) => vaga._id === form.vagaId) || null)
