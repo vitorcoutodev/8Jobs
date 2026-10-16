@@ -14,6 +14,7 @@ export default function CadastroEmpresa() {
     cnpj: '',
     email: '',
     telefone: '',
+    cidade: '',
   });
 
   // Controla o envio e as mensagens apresentadas ao usuário.
@@ -50,6 +51,7 @@ export default function CadastroEmpresa() {
         cnpj: '',
         email: '',
         telefone: '',
+        cidade: '',
       });
 
       // Aguarda brevemente antes de voltar ao início.
@@ -161,6 +163,22 @@ export default function CadastroEmpresa() {
               onChange={handleChange}
               required
               placeholder="(51) 99999-9999"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="cidade" className="mb-1.5 block text-sm font-semibold">
+              Cidade
+            </label>
+            <input
+              id="cidade"
+              name="cidade"
+              value={formulario.cidade}
+              onChange={handleChange}
+              required
+              maxLength={100}
+              placeholder="Ex.: Porto Alegre"
               className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500"
             />
           </div>
