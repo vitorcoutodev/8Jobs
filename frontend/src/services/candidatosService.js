@@ -1,6 +1,6 @@
 
  // Endereço da API do microserviço de candidatos.
-const API_URL = 'http://localhost:3002/candidatos';
+const API_URL = 'http://localhost:3003/candidatos';
 
 // Busca os candidatos cadastrados.
 export async function listarCandidatos() {
