@@ -1,5 +1,5 @@
 // Endereço base da API do microserviço de vagas.
-const API_URL = 'http://localhost:3003/vagas';
+const API_URL = 'http://localhost:3002/vagas';
 
 // Busca as vagas cadastradas no backend.
 export async function listarVagas() {
