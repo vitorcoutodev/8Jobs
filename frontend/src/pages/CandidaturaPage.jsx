@@ -2,7 +2,7 @@
 // A pessoa preenche seus dados, escolhe uma vaga aberta e envia.
 // Ao enviar, a página cria o candidato (serviço de candidatos) e depois a candidatura (serviço de candidaturas).
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { listarVagas } from '../services/vagasService.js'
 import { cadastrarCandidato } from '../services/candidatosService.js'
 import { cadastrarCandidatura } from '../services/candidaturasService.js'
@@ -132,11 +132,11 @@ export default function CandidaturaPage() {
     <div className="min-h-screen bg-[#f7f8f6] text-slate-900">
       <header className="border-b border-slate-200/80 bg-white/90">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-4 sm:px-8">
-          <a href="#inicio" className="flex items-center gap-2.5 font-extrabold tracking-tight text-slate-900" aria-label="8Jobs, início">
+          <Link to="/" className="flex items-center gap-2.5 font-extrabold tracking-tight text-slate-900" aria-label="8Jobs, início">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500 text-lg text-white">8</span>
             <span className="text-xl">jobs<span className="text-emerald-500">.</span></span>
-          </a>
-          <a href="#inicio" className="text-sm font-semibold text-slate-600 hover:text-slate-900">Voltar para as vagas</a>
+          </Link>
+          <Link to="/vagas" className="text-sm font-semibold text-slate-600 hover:text-slate-900">Voltar para as vagas</Link>
         </div>
       </header>
 
@@ -152,7 +152,7 @@ export default function CandidaturaPage() {
             </p>
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
               <button onClick={recomecar} className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700">Enviar outra candidatura</button>
-              <a href="#inicio" className="rounded-xl px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">Ver mais vagas</a>
+              <Link to="/vagas" className="rounded-xl px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">Ver mais vagas</Link>
             </div>
           </div>
         ) : (
