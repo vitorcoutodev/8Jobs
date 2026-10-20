@@ -1,168 +1,216 @@
-8JOBS — EXPLICAÇÃO GERAL, FRONT-END E BACK-END
+8JOBS — EXPLICAÇÃO DO PROJETO
 
-Este material explica o projeto em linguagem introdutória. Para explicar a arquitetura completa, a seção “Fluxo considerando o microserviço /vagas” descreve como o sistema funcionaria se esse serviço já estivesse criado e conectado. No código examinado, porém, o serviço /vagas ainda não existe e a Home ainda apresenta vagas de demonstração. Essa distinção evita confundir a arquitetura desejada com o que está implementado hoje.
+Este guia descreve o código atual do 8Jobs: uma plataforma web de vagas feita com
+React no frontend, Node.js e Express no backend, quatro microserviços e quatro
+bancos MongoDB separados.
 
-1. VISÃO GERAL DO 8JOBS
 
-O 8Jobs é uma plataforma de empregos. Candidatos consultam oportunidades e enviam candidaturas; empresas cadastram seus dados e publicam vagas; a plataforma guarda essas informações para que possam ser consultadas depois.
+1. VISÃO GERAL
 
-Uma aplicação web costuma ter três partes principais:
+Candidatos consultam vagas e enviam candidaturas. Empresas cadastram seus dados
+e publicam oportunidades. O frontend envia pedidos HTTP ao gateway; o gateway
+encaminha cada pedido ao microserviço responsável; o serviço valida os dados e
+acessa o banco que lhe pertence.
 
-- Front-end: a interface que aparece no navegador. Exibe informações e recebe ações, como digitar uma busca ou enviar um formulário.
-- Back-end: recebe os pedidos do front-end, aplica regras e decide como consultar ou alterar dados.
-- Banco de dados: guarda os dados de forma persistente, para que continuem disponíveis depois que uma página ou servidor for fechado.
+                 FRONTEND (React)
+                        |
+                        | HTTP / JSON
+                        v
+                 GATEWAY (:3000)
+                        |
+       +----------------+----------------+----------------+
+       |                |                |                |
+       v                v                v                v
+   EMPRESAS          VAGAS          CANDIDATOS      CANDIDATURAS
+   API :3001         API :3002       API :3003        API :3004
+       |                |                |                |
+       v                v                v                v
+   8jobs_empresas   8jobs_vagas   8jobs_candidatos  8jobs_candidaturas
 
-O caminho completo de uma consulta, considerando o serviço /vagas integrado, seria:
+As setas verticais representam cada serviço acessando o próprio banco. Os
+bancos não consultam uns aos outros diretamente. Quando um serviço precisa de
+informação de outro, ele consulta a API desse serviço usando HTTP.
 
-Navegador
-  ↓
-React (interface)
-  ↓ fetch pela rede usando HTTP
-API principal / gateway
-  ↓ encaminha o pedido
-Microserviço de vagas
-  ↓ consulta os dados
-MongoDB
 
-A resposta volta no sentido inverso. O banco entrega os dados ao serviço de vagas; o serviço responde à API em JSON; o front-end recebe esse JSON e atualiza a tela.
+2. COMO OS SERVIÇOS SE COMUNICAM
 
-Alguns termos importantes:
+Vagas e empresas
 
-- HTTP: conjunto de regras usado para enviar pedidos e respostas pela rede.
-- API: conjunto de endereços e operações que um programa oferece para outros programas.
-- JSON: formato de texto usado para representar dados, por exemplo { "titulo": "Designer" }.
-- Rota: endereço e método HTTP que identificam uma operação, como GET /vagas.
-- CRUD: quatro operações comuns com dados: criar (Create), consultar (Read), atualizar (Update) e excluir (Delete).
-- Microserviço: aplicação separada que cuida de uma área, como vagas ou candidatos.
-- Gateway: ponto de entrada que recebe pedidos do front-end e os encaminha ao serviço responsável.
-- MongoDB: banco de dados que guarda documentos, parecidos com objetos JSON.
+1. O serviço de vagas recebe uma vaga com empresaId.
+2. Antes de criar ou trocar a empresa de uma vaga, consulta a API de empresas.
+3. A API de empresas lê o banco 8jobs_empresas e responde com os dados da empresa.
+4. O serviço de vagas guarda o empresaId no banco 8jobs_vagas. Nas consultas,
+   também pode incluir os dados da empresa na resposta.
 
-2. FRONT-END
+Candidaturas, candidatos e vagas
 
-O front-end atual usa React para montar a interface, Vite para executar e preparar o projeto, e Tailwind CSS para aplicar estilos. No código atual, existe a Home; as demais páginas ainda precisam ser implementadas.
+1. O serviço de candidaturas recebe candidatoId e vagaId.
+2. Consulta a API de candidatos para confirmar que o candidato existe.
+3. Consulta a API de vagas para confirmar que a vaga existe e está ABERTA.
+4. Verifica se o candidato e a vaga existem e se a vaga está aberta.
+5. Se as validações passarem, grava candidatoId e vagaId no banco 8jobs_candidaturas.
+6. O mesmo candidato não pode se candidatar duas vezes à mesma vaga.,
 
-Arquivos do front-end:
 
-- frontend/index.html: documento HTML inicial. Possui um elemento com id="root", onde o React monta a aplicação, e importa src/main.jsx.
-- frontend/src/main.jsx: ponto de entrada do React. Encontra o elemento root e renderiza o componente App.
-- frontend/src/App.jsx: contém a Home, incluindo cabeçalho, busca, cartões de vagas, área para empresas e rodapé. O array jobs contém quatro vagas fictícias.
-- JobCard, dentro de App.jsx: componente que apresenta uma vaga. Recebe um objeto de vaga como propriedade (prop).
-- useState: recurso do React usado para guardar o que a pessoa digitou nos campos de busca.
-- useMemo: recurso que recalcula a lista filtrada quando os textos da busca mudam.
-- frontend/src/index.css: importa Tailwind e define estilos gerais da página.
-- frontend/package.json: registra React, Vite e Tailwind, além dos comandos npm run dev, npm run build e npm run preview.
-- frontend/package-lock.json: registra versões exatas e outras informações das dependências instaladas.
-- frontend/vite.config.js: configura os plugins de React e Tailwind e o servidor local do Vite, cuja porta padrão é 5173. Se ela já estiver ocupada, o Vite pode usar outra porta.
+Esse fluxo está implementado em:
 
-Vite não é o servidor de dados do 8Jobs. Ele serve o front-end durante o desenvolvimento e prepara os arquivos da interface para publicação. O servidor Express da API é um programa separado.
+- services/vagas/src/clients/empresasClient.js
+- services/candidaturas/src/clients/clienteHttp.js
+- services/vagas/src/controllers/vagasControllers.js
+- services/candidaturas/src/controllers/candidaturaControllers.js
 
-Como a Home buscaria vagas se /vagas estivesse pronto:
+O gateway é o ponto de entrada do frontend. Ele não substitui essas chamadas
+entre serviços: as validações de empresa, candidato e vaga são feitas pelos
+próprios microserviços.
 
-1. A pessoa abre a Home ou a página de vagas.
-2. O React executa uma chamada fetch para a API, por exemplo GET /api/vagas?termo=designer.
-3. O gateway recebe a chamada e a encaminha ao microserviço de vagas.
-4. O microserviço consulta as vagas no MongoDB e responde em JSON.
-5. O React guarda a resposta e desenha os cartões com os dados recebidos.
 
-O endereço /api/vagas é um exemplo de caminho público que poderia ser oferecido pelo gateway. O endereço interno e a porta do microserviço precisam ser definidos na implementação. O fetch não deve ser confundido com uma consulta direta ao MongoDB: o navegador conversa com uma API, e o serviço de back-end conversa com o banco.
+3. FRONTEND
 
-No código atual, App.jsx ainda não faz fetch: filtra os quatro objetos locais do array jobs. Por isso, a busca funciona sem qualquer API ou banco, mas mostra apenas dados demonstrativos. Os botões de entrar, criar conta e salvar vaga também ainda não executam operações reais. Para navegar entre páginas React, o projeto ainda precisa de rotas, por exemplo com React Router.
+O frontend está em frontend/ e usa React, Vite, React Router e Tailwind CSS.
+O Vite serve a interface durante o desenvolvimento; ele não é o backend nem o
+banco de dados.
 
-3. BACK-END
+As páginas estão ligadas às rotas abaixo:
 
-O back-end usa Node.js e Express. Express ajuda a criar servidores HTTP e associar endereços, como /candidatos, a funções JavaScript. Os serviços de candidatos, empresas e candidaturas possuem pastas próprias. A explicação abaixo inclui também o microserviço /vagas como parte do desenho completo solicitado.
+- / — página inicial, que consulta e filtra vagas.
+- /vagas — lista de vagas.
+- /vagas/:id — detalhes de uma vaga.
+- /vagas/cadastrar — cadastro de vaga.
+- /cadastro-empresa — cadastro de empresa.
+- /cadastro-candidato — cadastro de candidato.
+- /candidatos — lista de candidatos.
+- /formulario — formulário de candidatura.
 
-Fluxo considerando o microserviço /vagas:
+frontend/src/services/api.js define o endereço base da API. Por padrão, usa
+http://localhost:3000/api. A variável VITE_API_URL pode substituir esse endereço.
+Os demais arquivos de frontend/src/services/ agrupam os pedidos para cada
+recurso, como vagas, empresas, candidatos e candidaturas.
 
-- O servidor principal (gateway) recebe a chamada HTTP do navegador.
-- O gateway identifica o assunto do caminho, por exemplo /api/vagas, e encaminha a chamada ao serviço de vagas.
-- A rota do microserviço escolhe uma função do controller.
-- O controller aplica regras, chama o model e prepara a resposta.
-- O model usa Mongoose para consultar ou alterar os documentos no MongoDB.
-- O controller responde com um código HTTP e, normalmente, dados JSON.
 
-Analogia: a rota é o endereço da sala; o controller é a pessoa que entende o pedido e coordena o trabalho; o model conhece o formato dos dados e faz a consulta ao banco. O servidor inicia a aplicação e o banco guarda as informações.
+4. BACKEND E ROTAS
 
-Arquivos da raiz:
+O backend usa Node.js e Express. Em cada serviço, as rotas recebem os pedidos,
+os controllers aplicam as regras, os models definem os dados e o Mongoose lê ou
+grava no MongoDB.
 
-- server.js: inicia o Express principal na porta 3000. Atualmente responde apenas a GET / com “API 8Jobs funcionando!”. Ainda não encaminha chamadas aos microserviços; portanto, o comportamento de gateway acima descreve o que ele deverá fazer quando essa parte for implementada.
-- package.json: registra dependências da raiz, como Express, dotenv e Mongoose, e ferramentas de desenvolvimento como Jest e Cypress. Ter essas ferramentas instaladas não significa que já existam testes escritos.
-- package-lock.json: registra as versões exatas das dependências instaladas na raiz.
-- .gitignore: impede o Git de incluir itens locais ou gerados, como node_modules, arquivos .env, logs e pastas dist e build.
-- README.md: apresenta objetivos, entidades e rotas planejadas. Algumas informações ficaram antigas; por exemplo, descreve Skeleton CSS, enquanto o front-end atual usa React e Tailwind.
+Gateway — server.js, porta 3000
 
-3.1 Serviço de candidatos
+Recebe os pedidos públicos em /api e encaminha /api/empresas, /api/vagas,
+/api/candidatos e /api/candidaturas para o serviço correspondente. Os endereços
+internos podem ser ajustados pelas variáveis EMPRESAS_URL, VAGAS_URL,
+CANDIDATOS_URL e CANDIDATURAS_URL.
 
-- services/candidatos/server.js carrega variáveis de ambiente, chama a conexão com o banco e inicia o serviço, por padrão na porta 3003.
-- services/candidatos/src/config/database.js conecta ao MongoDB por meio de Mongoose usando MONGODB_URI.
-- services/candidatos/src/app.js configura o Express para ler JSON e monta as rotas sob /candidatos.
-- services/candidatos/src/routes/candidatoRoutes.js associa GET, POST, PUT e DELETE às funções correspondentes.
-- services/candidatos/src/controllers/candidatoController.js implementa as operações de listar, buscar por ID, cadastrar, atualizar e excluir. Também escolhe códigos de resposta como 200 (sucesso), 201 (criado), 400 (pedido inválido), 404 (não encontrado) e 500 (erro interno).
-- services/candidatos/src/models/candidatoModel.js descreve os campos nome, e-mail, telefone, cidade e habilidades. Os quatro primeiros são obrigatórios; habilidades é uma lista de textos que começa vazia.
-- services/candidatos/package.json registra Express, dotenv e Mongoose, mas também declara “mogoose”, que parece ser um erro de digitação e não é usado pelo código.
+Microserviços e rotas
 
-O serviço de candidatos tem as partes principais ligadas umas às outras, mas precisa de um MONGODB_URI válido e de uma instância MongoDB acessível. A rota de listagem devolve dados pessoais como e-mail e telefone e não apresenta autenticação; o acesso deve ser controlado antes da publicação.
+- Empresas — porta 3001; GET /empresas, GET /empresas/:id, POST /empresas,
+  PUT /empresas/:id e DELETE /empresas/:id.
+- Vagas — porta 3002; GET /vagas, GET /vagas/:id, POST /vagas,
+  PUT /vagas/:id e DELETE /vagas/:id.
+- Candidatos — porta 3003; GET /candidatos, GET /candidatos/:id,
+  POST /candidatos, PUT /candidatos/:id e DELETE /candidatos/:id.
+- Candidaturas — porta 3004; GET /candidaturas, GET /candidaturas/:id,
+  POST /candidaturas, PUT /candidaturas/:id e DELETE /candidaturas/:id.
 
-3.2 Serviço de empresas
+O gateway acrescenta /api ao endereço público. Por exemplo, o frontend pede
+GET http://localhost:3000/api/vagas; o gateway encaminha para
+GET http://localhost:3002/vagas.
 
-- services/empresas/server.js contém uma versão de servidor na porta 3001 que usa o driver oficial mongodb e define GET /empresas e GET /empresas/:id. Essa versão importa ./src/database, mas esse arquivo não existe na estrutura atual; assim, o servidor não inicia como está.
-- services/empresas/src/app.js representa uma segunda estrutura Express que tenta montar as rotas da pasta src/routes.
-- services/empresas/src/controllers/empresaController.js contém operações planejadas para listar, consultar, cadastrar, alterar e excluir empresas.
-- services/empresas/src/routes/empresaRoutes.js e services/empresas/src/models/empresaModel.js estavam vazios na leitura usada para esta explicação. Sem rotas o Express não oferece os caminhos; sem model, o controller não tem a definição Empresa que importa.
-- services/empresas/src/config/database.js usa Mongoose, mas services/empresas/package.json declara mongodb, não Mongoose. Há duas abordagens misturadas: usar o driver mongodb diretamente ou padronizar o serviço com Mongoose. O projeto precisa escolher e alinhar servidor, rotas, model e dependências.
 
-3.3 Serviço de vagas — visão assumida para a arquitetura completa
+5. DADOS E REGRAS PRINCIPAIS
 
-Considerando que este microserviço já tivesse sido criado, ele seria responsável por cadastrar e consultar oportunidades. Uma estrutura semelhante à de candidatos poderia conter:
+Cada serviço tem seu próprio banco e coleção:
 
-- server.js para carregar configuração, conectar ao banco e iniciar o serviço;
-- src/app.js para configurar Express e montar as rotas /vagas;
-- src/config/database.js para conectar ao MongoDB;
-- src/routes/vagaRoutes.js para associar caminhos HTTP às funções do controller;
-- src/controllers/vagaController.js para validar pedidos e executar as operações;
-- src/models/vagaModel.js para definir campos como título, descrição, salário, modalidade, cidade, requisitos, empresaId e status.
+- Empresas: banco 8jobs_empresas, coleção empresas.
+- Vagas: banco 8jobs_vagas, coleção vagas.
+- Candidatos: banco 8jobs_candidatos, coleção candidatos.
+- Candidaturas: banco 8jobs_candidaturas, coleção candidaturas.
 
-As operações esperadas seriam GET /vagas (listar), GET /vagas/:id (consultar uma), POST /vagas (cadastrar), PUT /vagas/:id (atualizar) e DELETE /vagas/:id (excluir). A listagem poderia receber filtros de busca. O gateway encaminharia os caminhos públicos para esse serviço e o React mostraria as respostas.
+Os quatro serviços usam Mongoose e a variável MONGODB_URI nos arquivos .env
+locais. Os arquivos .env.example mostram a configuração padrão para MongoDB
+local em mongodb://localhost:27017.
 
-Essa seção descreve a arquitetura supondo o serviço pronto. Na estrutura de arquivos examinada, a pasta services/vagas ainda não existe, e o gateway não encaminha chamadas a serviços. O microserviço e sua integração ainda precisam ser implementados.
+Os vínculos entre bancos são feitos guardando IDs, não copiando nem acessando
+coleções remotas:
 
-3.4 Serviço de candidaturas
+- Uma vaga guarda empresaId.
+- Uma candidatura guarda candidatoId e vagaId.
 
-- services/candidaturas/server.js carrega dotenv, tenta conectar ao MongoDB e inicia o serviço, por padrão na porta 3004.
-- services/candidaturas/src/config/database.js usa Mongoose e MONGODB_URI para conectar ao banco.
-- services/candidaturas/src/app.js configura Express e tenta montar as rotas /candidaturas.
-- services/candidaturas/src/routes/candidaturaRoutes.js estava vazio na leitura usada para esta explicação. O app importa esse arquivo para registrar rotas, então as funções do controller não ficam disponíveis como endpoints enquanto o arquivo não for preenchido.
-- services/candidaturas/src/controllers/candidaturaControllers.js contém operações de listar, consultar, cadastrar, alterar e excluir candidaturas.
-- services/candidaturas/src/models/candidaturaModel.js define candidatoId, vagaId, data e status. A data recebe a data atual por padrão; o status começa como ENVIADA e pode ser EM_ANALISE, APROVADA ou REJEITADA. Os timestamps acrescentam createdAt e updatedAt.
-- services/candidaturas/package.json não declara as dependências que seus arquivos importam (Express, dotenv e Mongoose), e essa pasta não possui package-lock.json próprio.
+Regras relevantes:
 
-O modelo guarda os IDs do candidato e da vaga, mas isso por si só não confirma que esses registros realmente existem nos outros serviços. Essa verificação precisa ser definida no fluxo entre serviços.
+- Vaga exige título, descrição, salário não negativo, modalidade, cidade e
+  empresaId. O status começa como ABERTA e pode ser FECHADA.
+- Candidato exige nome, e-mail, telefone e cidade; o e-mail é único.
+- Candidatura só pode apontar para candidato existente e vaga aberta. O status
+  inicial é ENVIADA; outros valores possíveis são EM_ANALISE, APROVADA e
+  REJEITADA.
+- Cada par candidatoId + vagaId é único, impedindo candidatura duplicada.
+- Os models registram createdAt e updatedAt automaticamente.
 
-4. COMO AS PÁGINAS SE RELACIONAM COM AS APIs
+database/conexao.js centraliza os nomes dos quatro bancos para os scripts de
+criação e popularização. npm run db:criar cria as coleções e índices. npm run
+db:popular adiciona dados de exemplo sem sobrescrever registros existentes.
+O argumento --zerar apaga os registros dos quatro bancos antes de inserir os
+exemplos; use-o somente quando quiser realmente apagar os dados existentes.
 
-Quando as páginas do front-end forem implementadas, um fluxo possível será:
 
-- Home e lista de vagas: GET /api/vagas para mostrar as oportunidades.
-- Detalhes: GET /api/vagas/:id para carregar uma vaga específica.
-- Cadastro de empresa: POST /api/empresas para enviar os dados à API.
-- Cadastro de vaga: POST /api/vagas, incluindo a identificação da empresa responsável.
-- Cadastro de candidato: POST /api/candidatos.
-- Formulário de candidatura: POST /api/candidaturas com candidatoId e vagaId.
-- Lista de candidatos: GET /api/candidatos, com acesso protegido por autenticação e autorização.
+6. COMO EXECUTAR NO WINDOWS
 
-Esses endereços com prefixo /api representam uma proposta para os caminhos externos do gateway. Os serviços internos podem usar outros endereços e portas, definidos quando o gateway for implementado.
+Pré-requisitos: Node.js e MongoDB Server instalados. O MongoDB Compass é a
+interface visual; quem guarda os dados e escuta na porta 27017 é o MongoDB
+Server. No Compass, conecte usando mongodb://127.0.0.1:27017.
 
-5. ESTADO ATUAL E PRÓXIMAS CONEXÕES
+No PowerShell, se o comando npm for bloqueado pela política de execução de
+scripts, use npm.cmd nos exemplos abaixo. No Git Bash, use npm normalmente.
 
-Hoje, a Home aparece no navegador pelo Vite e usa vagas fictícias. O servidor principal Express funciona como resposta de saúde na raiz, mas ainda não faz papel de gateway. O serviço de candidatos tem uma estrutura CRUD; empresas e candidaturas têm arquivos incompletos ou conflitantes. O serviço /vagas está descrito aqui como parte da arquitetura considerada, mas ainda não está criado no código examinado.
+Na pasta raiz do projeto, instale todas as dependências do frontend e dos quatro
+serviços de uma vez. O npm workspaces está configurado na raiz:
 
-Para tornar o fluxo completo, os passos principais são:
+    npm.cmd install
 
-1. Criar o microserviço /vagas com modelo, controller, rotas, conexão e configuração de dependências.
-2. Completar e alinhar os serviços de empresas e candidaturas.
-3. Fazer o servidor principal encaminhar cada caminho ao microserviço correspondente.
-4. Criar as páginas React e as rotas do front-end.
-5. Trocar os dados de demonstração por chamadas fetch à API.
-6. Tratar carregamento, erros, resultados vazios, validação de formulários e permissões.
+Para iniciar tudo, use um único comando na raiz:
 
-Assim, a pessoa usuária interage com o front-end; o front-end conversa com APIs; os serviços aplicam as regras; e o MongoDB armazena os dados. Cada parte tem uma responsabilidade definida, mas todas precisam ser ligadas para a plataforma funcionar de ponta a ponta.
+    npm.cmd run dev
+
+O comando cria os arquivos .env que estiverem faltando, verifica se o MongoDB
+está acessível e inicia os quatro serviços, o gateway e o frontend. Os arquivos
+.env existentes não são sobrescritos. Pressione Ctrl+C para encerrar todos os
+processos. O frontend normalmente fica em http://localhost:5173 e o gateway em
+http://localhost:3000.
+
+Para criar os bancos, coleções e índices e inserir dados de exemplo, rode estes
+comandos uma vez (ou quando precisar):
+
+    npm.cmd run db:criar
+    npm.cmd run db:popular
+
+Se o PowerShell bloquear npm.ps1, use npm.cmd como nos exemplos. No Git Bash,
+use npm e npm run dev normalmente.
+
+
+7. TESTES
+
+Os testes Jest dos microserviços ficam em services/*/test. Na raiz, rode:
+
+    npm.cmd test
+
+Os testes Cypress estão em cypress/e2e e cobrem navegação, consulta e seleção
+de vagas e candidatura. Eles usam uma API simulada em
+cypress/support/fakeApi.js; para esses testes, não é preciso iniciar MongoDB,
+microserviços ou gateway. Inicie o frontend e, em outro terminal, rode:
+
+    npm.cmd run dev:frontend
+    npx.cmd cypress open
+
+
+8. ARQUIVOS IMPORTANTES
+
+- server.js — gateway Express.
+- frontend/src/App.jsx — rotas do React.
+- frontend/src/services/ — chamadas HTTP do frontend.
+- services/*/src/routes/ — rotas HTTP dos microserviços.
+- services/*/src/controllers/ — regras e respostas HTTP.
+- services/*/src/models/ — estrutura e validação dos documentos.
+- services/*/src/config/database.js — conexão de cada microserviço ao MongoDB.
+- services/*/src/clients/ — chamadas HTTP entre microserviços.
+- database/ — scripts de criação dos bancos e dados de exemplo.
+- cypress/ — testes de ponta a ponta com API simulada.
