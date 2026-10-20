@@ -1,393 +1,195 @@
-p8Jobs
-Uma plataforma web de vagas de emprego, na qual empresas possam cadastrar oportunidades e candidatos possam visualizar e se candidatar às vagas disponíveis.
-
-Objetivo
-Desenvolver uma aplicação web funcional que permita:
-
-cadastrar empresas;
-cadastrar vagas de emprego;
-consultar vagas disponíveis;
-cadastrar candidatos;
-realizar candidaturas;
-consultar candidatos;
-relacionar candidatos e vagas;
-testar a API automaticamente;
-testar o frontend automaticamente;
-organizar o backend utilizando uma arquitetura orientada a microserviços.
-1. Análise e planejamento
-1.1 Problema
 # 8Jobs
 
-Uma plataforma web de vagas de emprego, na qual empresas possam cadastrar oportunidades e candidatos possam visualizar e se candidatar às vagas disponíveis.
+Plataforma de vagas de emprego. Empresas cadastram oportunidades; candidatos
+consultam as vagas e enviam candidaturas.
 
----
+## Funcionalidades
 
-# Objetivo
+- Cadastrar, consultar, atualizar e excluir empresas.
+- Cadastrar, consultar, atualizar e excluir vagas.
+- Cadastrar, consultar, atualizar e excluir candidatos.
+- Criar e consultar candidaturas, alterar seu status e excluí-las.
+- Consultar vagas pela interface React e enviar candidaturas pelo formulário.
+- Testar os serviços com Jest e os fluxos de interface com Cypress.
 
-Desenvolver uma aplicação web funcional que permita:
+## Tecnologias
 
-- cadastrar empresas;
-- cadastrar vagas de emprego;
-- consultar vagas disponíveis;
-- cadastrar candidatos;
-- realizar candidaturas;
-- consultar candidatos;
-- relacionar candidatos e vagas;
-- testar a API automaticamente;
-- testar o frontend automaticamente;
-- organizar o backend utilizando uma arquitetura orientada a microserviços.
-
----
-
-# 1. Análise e planejamento
-
-## 1.1 Problema
-
-Empresas possuem dificuldades para divulgar suas oportunidades de trabalho e organizar os candidatos interessados.
-
-O 8Jobs tem como objetivo centralizar a divulgação de vagas de emprego, permitindo que empresas cadastrem oportunidades e que candidatos consultem as vagas disponíveis e realizem suas candidaturas.
-
-1.2 Funcionalidades
-Empresas
-O sistema deverá permitir:
-
-cadastrar uma empresa;
-listar empresas;
-consultar uma empresa;
-alterar dados de uma empresa;
-excluir uma empresa.
-Vagas
-O sistema deverá permitir:
-
-cadastrar uma vaga;
-listar vagas;
-consultar uma vaga;
-alterar uma vaga;
-excluir uma vaga;
-visualizar os dados da empresa responsável pela vaga.
-Candidatos
-O sistema deverá permitir:
-
-cadastrar candidato;
-listar candidatos;
-consultar candidato;
-alterar dados;
-excluir candidato.
-Candidaturas
-O sistema deverá permitir:
-
-realizar uma candidatura;
-consultar candidaturas;
-consultar uma candidatura;
-alterar uma candidatura;
-excluir uma candidatura;
-relacionar candidatos e vagas.
-2. Entidades
-Empresa
----
-
-## 1.2 Funcionalidades
-
-### Empresas
-
-O sistema deverá permitir:
-
-- cadastrar uma empresa;
-- listar empresas;
-- consultar uma empresa;
-- alterar dados de uma empresa;
-- excluir uma empresa.
-
-### Vagas
-
-O sistema deverá permitir:
-
-- cadastrar uma vaga;
-- listar vagas;
-- consultar uma vaga;
-- alterar uma vaga;
-- excluir uma vaga;
-- visualizar os dados da empresa responsável pela vaga.
-
-### Candidatos
-
-O sistema deverá permitir:
-
-- cadastrar candidato;
-- listar candidatos;
-- consultar candidato;
-- alterar dados;
-- excluir candidato.
-
-### Candidaturas
-
-O sistema deverá permitir:
-
-- realizar uma candidatura;
-- consultar candidaturas;
-- consultar uma candidatura;
-- alterar uma candidatura;
-- excluir uma candidatura;
-- relacionar candidatos e vagas.
-
----
-
-# 2. Entidades
-
-## Empresa
-
-```text
-Empresa
-├── id
-├── nome
-├── cnpj
-├── email
-├── telefone
-└── cidade
-Vaga
-```
-
-## Vaga
-
-```text
-Vaga
-├── id
-├── titulo
-├── descricao
-├── salario
-├── modalidade
-├── cidade
-├── requisitos
-├── empresaId
-└── status
-Status da vaga
-ABERTA
-FECHADA
-Candidato
-```
-
-### Status da vaga
-
-```text
-ABERTA
-FECHADA
-```
-
-## Candidato
-
-```text
-Candidato
-├── id
-├── nome
-├── email
-├── telefone
-├── cidade
-└── habilidades
-Candidatura
-```
-
-## Candidatura
-
-```text
-Candidatura
-├── id
-├── candidatoId
-├── vagaId
-├── data
-└── status
-Status da candidatura
-```
-
-### Status da candidatura
-
-```text
-ENVIADA
-EM_ANALISE
-APROVADA
-REJEITADA
-3. Arquitetura
-```
-
----
-
-# 3. Arquitetura
-
-O backend será desenvolvido utilizando uma arquitetura baseada em microserviços.
-
-O sistema será dividido em serviços com responsabilidades independentes:
-
-```text
-                         ┌─────────────────┐
-                         │     8Jobs       │
-                         │    Frontend     │
-                         └────────┬────────┘
-                                  │
-                               HTTP/REST
-                                  │
-          ┌───────────────────────┼───────────────────────┐
-          │                       │                       │
-          ▼                       ▼                       ▼
- ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
- │    Empresas     │    │      Vagas      │    │   Candidatos    │
- │   Microserviço  │    │   Microserviço  │    │   Microserviço  │
- └─────────────────┘    └─────────────────┘    └─────────────────┘
-                                  │
-                                  ▼
-                         ┌─────────────────┐
-                         │  Candidaturas   │
-                         │   Microserviço  │
-                         └────────┬────────┘
-                                  │
-                                  ▼
-                           ┌─────────────┐
-                           │   MongoDB   │
-                           └─────────────┘
-```
-
-A comunicação entre o frontend e os serviços será realizada através de APIs REST e HTTP.
-
-A imagem da arquitetura poderá ser armazenada em:
-
-docs/arquitetura.png
-4. Meios utilizadas
-Frontend
-HTML5
-CSS3
-JavaScript
-Skeleton CSS
-Backend
-Node.js
-Express
-API REST
-JSON
-Banco de dados
-MongoDB
-Testes
-Jest → testes do backend/API
-Cypress → testes do frontend
-Arquitetura
-Microserviços
-Comunicação HTTP/REST entre serviços
-5. API REST
-Empresas
-```text
-docs/arquitetura.png
-```
-
----
-
-# 4. Meios utilizadas
-
-## Frontend
-
-- HTML5
-- CSS3
-- JavaScript
-- Skeleton CSS
-
-## Backend
-
-- Node.js
-- Express
-- API REST
-- JSON
-
-## Banco de dados
-
-- MongoDB
-
-## Testes
-
-- Jest → testes do backend/API
-- Cypress → testes do frontend
+- Frontend: React, Vite, React Router e Tailwind CSS.
+- Backend: Node.js, Express e APIs REST que trocam dados em JSON.
+- Persistência: MongoDB, acessado pelos serviços com Mongoose.
+- Testes: Jest para as APIs dos serviços e Cypress para fluxos de ponta a ponta.
 
 ## Arquitetura
 
-- Microserviços
-- Comunicação HTTP/REST entre serviços
-
----
-
-# 5. API REST
-
-## Empresas
-
 ```text
-GET    /empresas
-GET    /empresas/:id
-POST   /empresas
-PUT    /empresas/:id
-DELETE /empresas/:id
-Vagas
+                         FRONTEND
+                            |
+                         HTTP / JSON
+                            v
+                     GATEWAY (:3000)
+                            |
+      +---------------------+---------------------+---------------------+
+      |                     |                     |                     |
+      v                     v                     v                     v
+ EMPRESAS API          VAGAS API          CANDIDATOS API       CANDIDATURAS API
+   (:3001)               (:3002)               (:3003)               (:3004)
+      |                     |                     |                     |
+      v                     v                     v                     v
+ 8jobs_empresas       8jobs_vagas       8jobs_candidatos    8jobs_candidaturas
 ```
 
-## Vagas
+O frontend envia pedidos ao gateway em `http://localhost:3000/api`. O gateway
+encaminha cada recurso ao serviço correspondente. Cada serviço acessa somente o
+próprio banco; os bancos não se conectam diretamente entre si.
 
-```text
-GET    /vagas
-GET    /vagas/:id
-POST   /vagas
-PUT    /vagas/:id
-DELETE /vagas/:id
-Candidatos
+Quando precisam de dados relacionados, os microserviços consultam as APIs uns
+dos outros por HTTP:
+
+- O serviço de vagas consulta a API de empresas para validar `empresaId` e pode
+  incluir os dados da empresa nas respostas de vagas.
+- O serviço de candidaturas consulta as APIs de candidatos e vagas. Confirma que
+  ambos existem e que a vaga está aberta antes de gravar a candidatura.
+- A vaga armazena `empresaId`; a candidatura armazena `candidatoId` e `vagaId`.
+
+## Bancos de dados
+
+O projeto utiliza quatro bancos MongoDB, um por microserviço:
+
+| Serviço | Porta | Banco | Coleção |
+| --- | ---: | --- | --- |
+| Empresas | 3001 | `8jobs_empresas` | `empresas` |
+| Vagas | 3002 | `8jobs_vagas` | `vagas` |
+| Candidatos | 3003 | `8jobs_candidatos` | `candidatos` |
+| Candidaturas | 3004 | `8jobs_candidaturas` | `candidaturas` |
+
+O MongoDB Server precisa estar em execução. O MongoDB Compass é a interface
+gráfica para consultar os dados; conecte-se a `mongodb://127.0.0.1:27017` e
+abra os bancos `8jobs_*`.
+
+Os scripts da pasta `database/` criam bancos, coleções, índices e dados de
+exemplo. Na raiz do projeto, execute:
+
+```powershell
+npm.cmd run db:criar
+npm.cmd run db:popular
 ```
 
-## Candidatos
+`db:criar` pode ser executado novamente para conferir ou criar a estrutura.
+`db:popular` inclui exemplos sem substituir registros existentes. O comando
+abaixo apaga os registros dos quatro bancos antes de inserir os exemplos; use-o
+somente se realmente quiser zerar os dados:
 
-```text
-GET    /candidatos
-GET    /candidatos/:id
-POST   /candidatos
-PUT    /candidatos/:id
-DELETE /candidatos/:id
-Candidaturas
+```powershell
+npm.cmd run db:popular -- --zerar
 ```
 
-## Candidaturas
+O endereço do servidor usado pelos scripts vem de `MONGODB_URL` no `.env` da
+raiz ou, por padrão, de `mongodb://localhost:27017`. Cada microserviço usa
+`MONGODB_URI` no seu próprio `.env`. Os arquivos `.env.example` mostram os
+valores locais recomendados.
 
-```text
-GET    /candidaturas
-GET    /candidaturas/:id
-POST   /candidaturas
-PUT    /candidaturas/:id
-DELETE /candidaturas/:id
+## Configuração no Windows
 
-6. MongoDB
-Os dados serão armazenados no MongoDB.
+Pré-requisitos: Node.js e MongoDB Server instalados. No PowerShell, use
+`npm.cmd` e `npx.cmd` se a política de execução do sistema bloquear os scripts
+`npm.ps1` ou `npx.ps1`. No Git Bash, use `npm` e `npx` normalmente.
 
-7. Gateway
-Porta do server principal 3000:
-Porta do server empresas 3001:
-Porta do server vagas 3002:
-Porta do server candidatos 3003:
-Porta do serve candidaturas 3004:
-POrta do server Mongo 20717:
+Na raiz do projeto, instale todas as dependências com um único comando. O npm
+workspaces inclui o frontend e os quatro serviços:
+
+```powershell
+npm.cmd install
 ```
 
----
+Na primeira execução, o comando abaixo cria os arquivos `.env` que estiverem
+faltando a partir dos exemplos, verifica a conexão com o MongoDB e inicia os
+quatro microserviços, o gateway e o frontend:
 
-# 6. MongoDB
+```powershell
+npm.cmd run dev
+```
 
-Os dados serão armazenados no MongoDB.
+Os arquivos `.env` existentes não são sobrescritos. O `concurrently` identifica
+cada processo no terminal. Pressione Ctrl+C para encerrar todos os servidores.
+No Git Bash, use `npm install` e `npm run dev` sem o sufixo `.cmd`.
 
-##
+O frontend normalmente fica em `http://localhost:5173`; o gateway fica em
+`http://localhost:3000`. Se o Vite mostrar outra porta, use o endereço
+apresentado no terminal. O MongoDB Server precisa estar ligado antes de iniciar.
 
-# Execução do fluxo integrado (Dia 7)
+## Rotas do frontend
 
-O front-end envia as chamadas para o gateway em `http://localhost:3000/api`. O gateway encaminha cada recurso para o seu microserviço:
+| Caminho | Página |
+| --- | --- |
+| `/` | Página inicial e busca de vagas |
+| `/vagas` | Lista de vagas |
+| `/vagas/:id` | Detalhes de uma vaga |
+| `/vagas/cadastrar` | Cadastro de vaga |
+| `/cadastro-empresa` | Cadastro de empresa |
+| `/cadastro-candidato` | Cadastro de candidato |
+| `/candidatos` | Lista de candidatos |
+| `/formulario` | Formulário de candidatura |
 
-| Recurso público | Serviço | Porta padrão |
-| --- | --- | ---: |
-| `/api/empresas` | Empresas | 3001 |
-| `/api/vagas` | Vagas | 3002 |
-| `/api/candidatos` | Candidatos | 3003 |
-| `/api/candidaturas` | Candidaturas | 3004 |
+O endereço base do frontend é definido por `VITE_API_URL`; o padrão é
+`http://localhost:3000/api`.
 
-Cada microserviço grava seus documentos no MongoDB configurado por `MONGODB_URI`. Para desenvolvimento local, os arquivos `.env.example` apontam para `mongodb://localhost:27017/8jobs`.
+## Rotas das APIs
 
-1. Inicie o MongoDB localmente.
-2. Copie `.env.example` para `.env` na raiz e copie o `.env.example` de cada pasta em `services/` para `.env` naquela mesma pasta.
-3. Instale as dependências na raiz, no front-end e em cada serviço: `npm install` e `npm --prefix frontend install`, `npm --prefix services/empresas install`, `npm --prefix services/vagas install`, `npm --prefix services/candidatos install` e `npm --prefix services/candidaturas install`.
-4. Em terminais separados, execute na raiz: `npm run start:gateway`, `npm run start:empresas`, `npm run start:vagas`, `npm run start:candidatos`, `npm run start:candidaturas` e `npm run dev:frontend`.
+Os caminhos públicos passam pelo gateway em `/api`. Por exemplo,
+`GET /api/vagas` é encaminhado ao serviço de vagas como `GET /vagas`.
 
-No fluxo de candidatura, o formulário cria ou reaproveita o candidato durante a tentativa, envia `candidatoId` e `vagaId` ao serviço de candidaturas, e esse serviço confirma que ambos existem e que a vaga está aberta antes de persistir o vínculo no MongoDB.
+Cada recurso oferece as operações abaixo:
+
+| Recurso | Operações |
+| --- | --- |
+| `/empresas` | `GET`, `GET /:id`, `POST`, `PUT /:id`, `DELETE /:id` |
+| `/vagas` | `GET`, `GET /:id`, `POST`, `PUT /:id`, `DELETE /:id` |
+| `/candidatos` | `GET`, `GET /:id`, `POST`, `PUT /:id`, `DELETE /:id` |
+| `/candidaturas` | `GET`, `GET /:id`, `POST`, `PUT /:id`, `DELETE /:id` |
+
+## Testes
+
+### Jest
+
+Na raiz, execute:
+
+```powershell
+npm.cmd test
+npm.cmd test -- --verbose
+```
+
+Os testes iniciam as aplicações Express em portas temporárias e simulam os
+models MongoDB e as chamadas HTTP entre serviços. Por isso, testam regras e
+respostas das APIs sem precisar conectar ao MongoDB, iniciar os serviços reais
+ou alterar dados persistidos.
+
+### Cypress
+
+Os testes ponta a ponta estão em `cypress/e2e/` e usam a API simulada em
+`cypress/support/fakeApi.js`. Não é necessário iniciar o MongoDB, os
+microserviços ou o gateway para executar esses testes. Em terminais separados,
+na raiz, rode:
+
+```powershell
+npm.cmd run dev:frontend
+npx.cmd cypress open
+```
+
+Para executar Cypress sem abrir a interface:
+
+```powershell
+npx.cmd cypress run
+```
+
+## Arquivos principais
+
+- `server.js` — gateway Express.
+- `frontend/src/App.jsx` — rotas da interface React.
+- `frontend/src/services/` — chamadas HTTP do frontend.
+- `services/*/src/routes/` — rotas HTTP dos microserviços.
+- `services/*/src/controllers/` — regras de negócio e respostas das APIs.
+- `services/*/src/models/` — estrutura e validação dos documentos.
+- `services/*/src/clients/` — chamadas HTTP entre microserviços.
+- `services/*/test/` — testes Jest dos serviços.
+- `database/` — conexão, criação dos bancos e dados de exemplo.
+- `cypress/` — testes de interface com API simulada.
