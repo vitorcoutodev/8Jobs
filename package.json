@@ -4,14 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-<<<<<<< Updated upstream
     "setup": "npm install && npm --prefix frontend install && node scripts/preparar-env.js && node scripts/verificar-mongo.js && npm run db:reset",
     "predev": "node scripts/preparar-env.js && node scripts/verificar-mongo.js",
     "dev": "concurrently -n gateway,empresas,vagas,candidatos,candidaturas,frontend -c blue,green,yellow,magenta,cyan,red \"npm:start:gateway\" \"npm:start:empresas\" \"npm:start:vagas\" \"npm:start:candidatos\" \"npm:start:candidaturas\" \"npm:dev:frontend\"",
-=======
-    "predev": "node scripts/preparar-env.js && node scripts/verificar-mongo.js",
-    "dev": "concurrently --kill-others -n gateway,empresas,vagas,candidatos,candidaturas,frontend \"npm run start:gateway\" \"npm run start:empresas\" \"npm run start:vagas\" \"npm run start:candidatos\" \"npm run start:candidaturas\" \"npm run dev --workspace=frontend\"",
->>>>>>> Stashed changes
     "start": "npm run dev",
     "start:gateway": "node server.js",
     "start:empresas": "node services/empresas/server.js",
@@ -42,9 +37,5 @@
     "concurrently": "^9.0.0",
     "cypress": "^16.1.1",
     "jest": "^30.5.2"
-  },
-  "workspaces": [
-    "frontend",
-    "services/*"
-  ]
+  }
 }
