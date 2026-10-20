@@ -4,10 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "setup": "npm install && npm --prefix frontend install && node scripts/preparar-env.js && node scripts/verificar-mongo.js && npm run db:reset",
-    "predev": "node scripts/preparar-env.js && node scripts/verificar-mongo.js",
+    "setup": "npm install && npm --prefix frontend install",
     "dev": "concurrently -n gateway,empresas,vagas,candidatos,candidaturas,frontend -c blue,green,yellow,magenta,cyan,red \"npm:start:gateway\" \"npm:start:empresas\" \"npm:start:vagas\" \"npm:start:candidatos\" \"npm:start:candidaturas\" \"npm:dev:frontend\"",
-    "start": "npm run dev",
     "start:gateway": "node server.js",
     "start:empresas": "node services/empresas/server.js",
     "start:vagas": "node services/vagas/server.js",
@@ -19,9 +17,7 @@
     "db:reset": "npm run db:criar && npm run db:popular",
     "test": "jest",
     "cy:open": "cypress open",
-    "cy:run": "cypress run",
-    "env": "node scripts/preparar-env.js",
-    "mongo:check": "node scripts/verificar-mongo.js"
+    "cy:run": "cypress run"
   },
   "keywords": [],
   "author": "",
