@@ -10,6 +10,8 @@
     "start:candidatos": "node services/candidatos/server.js",
     "start:candidaturas": "node services/candidaturas/server.js",
     "dev:frontend": "npm --prefix frontend run dev",
+    "db:criar": "node database/criar-banco.js",
+    "db:popular": "node database/popular-banco.js",
     "test": "jest"
   },
   "keywords": [],
