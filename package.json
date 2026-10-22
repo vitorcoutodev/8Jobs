@@ -16,8 +16,8 @@
     "db:criar": "node database/criar-banco.js",
     "db:popular": "node database/popular-banco.js",
     "db:reset": "npm run db:criar && npm run db:popular",
-    "test": "jest --config services/jest.config.js",
-    "test:mongodb": "jest --config services/jest.config.js --runInBand services/candidatos/test/mongodb.integration.test.js",
+    "test": "jest --config jest.config.js",
+    "test:mongodb": "jest --config jest.config.js --runInBand services/candidatos/test/mongodb.integration.test.js",
     "cy:open": "cypress open --project . --config-file cypress/cypress.config.js",
     "cy:run": "cypress run --project . --config-file cypress/cypress.config.js"
   },

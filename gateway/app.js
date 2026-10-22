@@ -132,6 +132,9 @@ const criarGateway = ({ store, fetcher = global.fetch } = {}) => {
         } else if (recurso === 'candidatos' && id && ['GET', 'PUT', 'DELETE'].includes(metodo)) {
             usuario = exigirConta(req, res);
             if (!usuario) return;
+            if (usuario.role === 'empresa' && metodo !== 'GET') {
+                return res.status(403).json({ erro: 'Empresas podem apenas consultar perfis de candidatos' });
+            }
             if (usuario.role !== 'empresa' && String(usuario.id) !== String(id)) {
                 return res.status(403).json({ erro: 'Você só pode acessar o seu próprio cadastro' });
             }
