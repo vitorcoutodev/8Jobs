@@ -1,6 +1,6 @@
 module.exports = {
-    // Mantém a raiz do projeto como base apesar desta configuração estar em services/.
-    rootDir: '..',
+    // Define a pasta 8Jobs como base para os caminhos de testes abaixo.
+    rootDir: '.',
     // Executa os testes como código Node.js, pois eles chamam as APIs Express.
     testEnvironment: 'node',
     // Procura testes apenas dentro da pasta dos microserviços.
