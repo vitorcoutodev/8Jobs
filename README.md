@@ -10,6 +10,8 @@ consultam as vagas e enviam candidaturas.
 - Cadastrar, consultar, atualizar e excluir candidatos.
 - Criar e consultar candidaturas, alterar seu status e excluí-las.
 - Consultar vagas pela interface React e enviar candidaturas pelo formulário.
+- Cadastrar e autenticar candidatos e empresas com sessão armazenada no MongoDB.
+- Restringir a publicação de vagas e o acesso aos dados de candidatos por tipo de conta.
 - Testar os serviços com Jest e os fluxos de interface com Cypress.
 
 ## Tecnologias
@@ -39,8 +41,10 @@ consultam as vagas e enviam candidaturas.
 ```
 
 O frontend envia pedidos ao gateway em `http://localhost:3000/api`. O gateway
-encaminha cada recurso ao serviço correspondente. Cada serviço acessa somente o
-próprio banco; os bancos não se conectam diretamente entre si.
+encaminha cada recurso ao serviço correspondente e armazena as sessões em
+`8jobs_sessions`. Os quatro serviços de domínio acessam cada um o próprio banco;
+as portas dos serviços ficam limitadas ao endereço local para receber chamadas
+pelo gateway.
 
 Quando precisam de dados relacionados, os microserviços consultam as APIs uns
 dos outros por HTTP:
@@ -61,6 +65,7 @@ O projeto utiliza quatro bancos MongoDB, um por microserviço:
 | Vagas | 3002 | `8jobs_vagas` | `vagas` |
 | Candidatos | 3003 | `8jobs_candidatos` | `candidatos` |
 | Candidaturas | 3004 | `8jobs_candidaturas` | `candidaturas` |
+| Sessões do gateway | — | `8jobs_sessions` | `sessions` |
 
 O MongoDB Server precisa estar em execução. O MongoDB Compass é a interface
 gráfica para consultar os dados; conecte-se a `mongodb://127.0.0.1:27017` e
@@ -94,16 +99,15 @@ Pré-requisitos: Node.js e MongoDB Server instalados. No PowerShell, use
 `npm.cmd` e `npx.cmd` se a política de execução do sistema bloquear os scripts
 `npm.ps1` ou `npx.ps1`. No Git Bash, use `npm` e `npx` normalmente.
 
-Na raiz do projeto, instale todas as dependências com um único comando. O npm
-workspaces inclui o frontend e os quatro serviços:
+Na raiz do projeto, instale as dependências do gateway, dos testes e do frontend:
 
 ```powershell
-npm.cmd install
+npm.cmd run setup
 ```
 
-Na primeira execução, o comando abaixo cria os arquivos `.env` que estiverem
-faltando a partir dos exemplos, verifica a conexão com o MongoDB e inicia os
-quatro microserviços, o gateway e o frontend:
+O comando abaixo cria os arquivos `.env` que estiverem faltando a partir dos
+exemplos e inicia os quatro microserviços, o gateway e o frontend. Arquivos
+locais existentes não são sobrescritos:
 
 ```powershell
 npm.cmd run dev
@@ -116,6 +120,8 @@ No Git Bash, use `npm install` e `npm run dev` sem o sufixo `.cmd`.
 O frontend normalmente fica em `http://localhost:5173`; o gateway fica em
 `http://localhost:3000`. Se o Vite mostrar outra porta, use o endereço
 apresentado no terminal. O MongoDB Server precisa estar ligado antes de iniciar.
+Em produção, defina `SESSION_SECRET` como uma chave aleatória forte e use HTTPS
+para que o cookie de sessão seja enviado apenas em conexões seguras.
 
 ## Rotas do frontend
 
@@ -129,9 +135,34 @@ apresentado no terminal. O MongoDB Server precisa estar ligado antes de iniciar.
 | `/cadastro-candidato` | Cadastro de candidato |
 | `/candidatos` | Lista de candidatos |
 | `/formulario` | Formulário de candidatura |
+| `/login` | Entrada de candidatos e empresas |
 
 O endereço base do frontend é definido por `VITE_API_URL`; o padrão é
 `http://localhost:3000/api`.
+
+### Cadastro, login e sessões
+
+Candidatos e empresas criam contas com senha de pelo menos 8 caracteres. O
+microserviço da conta usa o `scrypt` nativo do Node para salvar somente o hash; consultas normais
+não selecionam a senha e a serialização remove o hash. O login valida as
+credenciais no microserviço correspondente e cria uma sessão HTTP no gateway,
+armazenada em `8jobs_sessions`. O cookie é `HttpOnly`, usa `SameSite=Lax`, tem
+validade de sete dias e o gateway limita tentativas de login.
+
+O cadastro inicia a sessão automaticamente. Candidatos autenticados podem se
+candidatar. Empresas autenticadas podem publicar vagas, consultar candidatos e
+gerenciar candidaturas de vagas próprias. O gateway confere o papel e a
+propriedade do registro; os microserviços escutam somente em `127.0.0.1`.
+
+Para demonstrar os dados de exemplo criados por `npm run db:popular`, use
+`ana.souza@exemplo.com` (candidato) ou `rh@techvale.com.br` (empresa), com a
+senha local `8JobsDemo2026!`. Essa senha é somente para contas de demonstração.
+
+Contas antigas sem senha não podem entrar com o novo login. Para habilitá-las
+com segurança, falta um fluxo de redefinição de senha com validação de e-mail.
+Também ficam como melhorias de produto a confirmação do e-mail e a interface
+para alterar a senha; elas exigem um fluxo seguro de e-mail e recuperação.
+
 
 ## Rotas das APIs
 
@@ -146,22 +177,37 @@ Cada recurso oferece as operações abaixo:
 | `/vagas` | `GET`, `GET /:id`, `POST`, `PUT /:id`, `DELETE /:id` |
 | `/candidatos` | `GET`, `GET /:id`, `POST`, `PUT /:id`, `DELETE /:id` |
 | `/candidaturas` | `GET`, `GET /:id`, `POST`, `PUT /:id`, `DELETE /:id` |
+| `/auth/login` | `POST` com tipo da conta, e-mail e senha |
+| `/auth/me` | `GET` para consultar a sessão atual |
+| `/auth/logout` | `POST` para encerrar a sessão |
 
 ## Testes
 
 ### Jest
 
-Na raiz, execute:
+O arquivo de configuração fica em `services/jest.config.js`. Na raiz, execute:
 
 ```powershell
 npm.cmd test
 npm.cmd test -- --verbose
 ```
 
+Para testar a persistência e o hash contra MongoDB real, configure uma URI de
+teste temporária e execute:
+
+```powershell
+$env:MONGODB_TEST_URI = 'mongodb://127.0.0.1:27017'
+npm.cmd run test:mongodb
+Remove-Item Env:MONGODB_TEST_URI
+```
+
 Os testes iniciam as aplicações Express em portas temporárias e simulam os
-models MongoDB e as chamadas HTTP entre serviços. Por isso, testam regras e
-respostas das APIs sem precisar conectar ao MongoDB, iniciar os serviços reais
-ou alterar dados persistidos.
+models MongoDB e as chamadas HTTP entre serviços. A suíte também verifica
+sessões, papéis de acesso e validação de hashes sem alterar dados persistidos.
+O teste de integração real está em
+`services/candidatos/test/mongodb.integration.test.js`; configure
+`MONGODB_TEST_URI` para executá-lo. Ele cria e remove somente o banco temporário
+`8jobs_test_<pid>`.
 
 ### Cypress
 
@@ -172,18 +218,20 @@ na raiz, rode:
 
 ```powershell
 npm.cmd run dev:frontend
-npx.cmd cypress open
+npx.cmd cypress open --project . --config-file cypress/cypress.config.js
 ```
 
 Para executar Cypress sem abrir a interface:
 
 ```powershell
-npx.cmd cypress run
+npx.cmd cypress run --project . --config-file cypress/cypress.config.js
 ```
 
 ## Arquivos principais
 
-- `server.js` — gateway Express.
+- `gateway/server.js` — inicia o gateway Express.
+- `gateway/app.js` — sessões, login, autorização por papel e proxy da API.
+- `scripts/prepare-env.js` — cria arquivos `.env` locais sem sobrescrever os existentes.
 - `frontend/src/App.jsx` — rotas da interface React.
 - `frontend/src/services/` — chamadas HTTP do frontend.
 - `services/*/src/routes/` — rotas HTTP dos microserviços.

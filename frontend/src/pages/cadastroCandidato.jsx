@@ -4,14 +4,18 @@ import { Link, useNavigate } from 'react-router-dom';
 
 // Importa a função responsável por cadastrar candidatos na API.
 import { cadastrarCandidato } from '../services/candidatosService.js';
+import { useAuth } from '../auth/AuthContext.jsx';
 
 export default function CadastroCandidato() {
   const navigate = useNavigate();
+  const { entrar } = useAuth();
 
   // Guarda as informações preenchidas pelo candidato.
   const [formulario, setFormulario] = useState({
     nome: '',
+    cpf: '',
     email: '',
+    senha: '',
     telefone: '',
     cidade: '',
     habilidades: '',
@@ -45,13 +49,16 @@ export default function CadastroCandidato() {
         ...formulario,
         habilidades: formulario.habilidades.split(',').map((item) => item.trim()).filter(Boolean),
       });
+      await entrar({ tipo: 'candidato', email: formulario.email, senha: formulario.senha });
 
       setSucesso('Candidato cadastrado com sucesso!');
 
       // Limpa os campos após o cadastro.
       setFormulario({
         nome: '',
+        cpf: '',
         email: '',
+        senha: '',
         telefone: '',
         cidade: '',
         habilidades: '',
@@ -102,6 +109,9 @@ export default function CadastroCandidato() {
         </div>
 
         {/* Formulário de cadastro do candidato. */}
+        {/* Nome: obrigatório, até 120 caracteres só no formulário; CPF: 11 dígitos, único, sem checar dígitos verificadores. */}
+        {/* E-mail tem formato validado; senha exige pelo menos 8 caracteres. */}
+        {/* Telefone é obrigatório, sem validação de formato; cidade é obrigatória; habilidades são opcionais, por vírgulas. */}
         <form
           onSubmit={handleSubmit}
           className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
@@ -121,6 +131,33 @@ export default function CadastroCandidato() {
               placeholder="Digite seu nome completo"
               className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500"
             />
+          </div>
+
+          {/* Solicita o CPF em 11 dígitos, sem pontos ou traço. */}
+          <div>
+            <label htmlFor="cpf" className="mb-1.5 block text-sm font-semibold">
+              CPF
+            </label>
+            <input
+              id="cpf"
+              name="cpf"
+              type="text"
+              value={formulario.cpf}
+              onChange={handleChange}
+              required
+              minLength={11}
+              maxLength={11}
+              pattern="[0-9]{11}"
+              inputMode="numeric"
+              placeholder="Somente números, sem pontuação"
+              title="Digite os 11 números do CPF, sem pontuação"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="senha" className="mb-1.5 block text-sm font-semibold">Senha</label>
+            <input id="senha" name="senha" type="password" value={formulario.senha} onChange={handleChange} required minLength={8} autoComplete="new-password" placeholder="Pelo menos 8 caracteres" className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500" />
           </div>
 
           <div>
@@ -208,6 +245,7 @@ export default function CadastroCandidato() {
           >
             {carregando ? 'Cadastrando...' : 'Cadastrar candidato'}
           </button>
+          <p className="text-center text-sm text-slate-500">Já tem conta? <Link to="/login" className="font-semibold text-emerald-700">Entrar</Link></p>
 
           <p className="text-center text-sm text-slate-500">
             Representa uma empresa?{' '}

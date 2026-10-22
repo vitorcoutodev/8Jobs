@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "setup": "npm install && npm --prefix frontend install",
+    "predev": "node scripts/prepare-env.js",
     "dev": "concurrently -n gateway,empresas,vagas,candidatos,candidaturas,frontend -c blue,green,yellow,magenta,cyan,red \"npm:start:gateway\" \"npm:start:empresas\" \"npm:start:vagas\" \"npm:start:candidatos\" \"npm:start:candidaturas\" \"npm:dev:frontend\"",
-    "start:gateway": "node server.js",
+    "start:gateway": "node gateway/server.js",
     "start:empresas": "node services/empresas/server.js",
     "start:vagas": "node services/vagas/server.js",
     "start:candidatos": "node services/candidatos/server.js",
@@ -15,18 +16,22 @@
     "db:criar": "node database/criar-banco.js",
     "db:popular": "node database/popular-banco.js",
     "db:reset": "npm run db:criar && npm run db:popular",
-    "test": "jest",
-    "cy:open": "cypress open",
-    "cy:run": "cypress run"
+    "test": "jest --config services/jest.config.js",
+    "test:mongodb": "jest --config services/jest.config.js --runInBand services/candidatos/test/mongodb.integration.test.js",
+    "cy:open": "cypress open --project . --config-file cypress/cypress.config.js",
+    "cy:run": "cypress run --project . --config-file cypress/cypress.config.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "connect-mongo": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^18.0.7",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.1",
+    "express-session": "^1.19.0",
     "mongoose": "^9.11.1"
   },
   "devDependencies": {

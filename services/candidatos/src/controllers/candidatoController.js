@@ -22,7 +22,8 @@ const responderErro = (res, erro, mensagemPadrao) => {
     // Código 11000 = valor duplicado em um campo único (ex.: e-mail).
     if (erro.code === 11000) {
         const campo = Object.keys(erro.keyPattern || {})[0] || 'campo';
-        return res.status(409).json({ erro: `Já existe um candidato com este ${campo}` });
+        const nomeCampo = campo === 'cpf' ? 'CPF' : campo === 'email' ? 'e-mail' : campo;
+        return res.status(409).json({ erro: `Já existe um candidato com este ${nomeCampo}` });
     }
 
     console.error(erro);
@@ -66,6 +67,9 @@ const criarCandidato = async (req, res) => {
 
 // PUT /candidatos/:id
 const atualizarCandidato = async (req, res) => {
+    if (Object.hasOwn(req.body || {}, 'senha')) {
+        return res.status(400).json({ erro: 'A senha não pode ser alterada por esta rota' });
+    }
     try {
         const candidato = await Candidato.findByIdAndUpdate(
             req.params.id,

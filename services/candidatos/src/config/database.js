@@ -1,4 +1,4 @@
-
+// Faz a conexão do microserviço de candidatos com o banco de dados MongoDB usando Mongoose.
 // Importa o Mongoose para conectar o Node.js ao MongoDB.
 const mongoose = require('mongoose');
 

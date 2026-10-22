@@ -18,6 +18,7 @@ app.use(express.json());
 
 // Importa as rotas de empresas.
 const empresaRoutes = require('./routes/empresaRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 
 // Define que todas as rotas de empresa começarão com /empresas.
@@ -26,6 +27,7 @@ const empresaRoutes = require('./routes/empresaRoutes');
 // router.get('/')     → GET /empresas
 // router.get('/:id')  → GET /empresas/:id
 app.use('/empresas', empresaRoutes);
+app.use('/auth', authRoutes);
 
 
 // Exporta a aplicação.

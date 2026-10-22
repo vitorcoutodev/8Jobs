@@ -27,6 +27,11 @@ const estrutura = [
                 chave: { cnpj: 1 },
                 opcoes: { unique: true },
                 motivo: 'Não permite duas empresas com o mesmo CNPJ.'
+            },
+            {
+                chave: { email: 1 },
+                opcoes: { unique: true },
+                motivo: 'Não permite duas empresas com o mesmo e-mail.'
             }
         ]
     },

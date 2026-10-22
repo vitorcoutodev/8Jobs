@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 // Importa a função que envia uma nova vaga para a API.
 import { cadastrarVaga } from '../services/vagasService.js';
-import { listarEmpresas } from '../services/empresasService.js';
+import { useAuth } from '../auth/AuthContext.jsx';
 
 // Importa os componentes compartilhados do projeto.
 import Navbar from '../components/navBar.jsx';
@@ -12,11 +12,11 @@ import Footer from '../components/footer.jsx';
 export default function CadastroVaga() {
   // Permite navegar para outra página depois do cadastro.
   const navigate = useNavigate();
+  const { usuario } = useAuth();
 
   // Guarda os valores digitados no formulário.
   const [formulario, setFormulario] = useState({
     titulo: '',
-    empresaId: '',
     descricao: '',
     requisitos: '',
     cidade: '',
@@ -29,16 +29,6 @@ export default function CadastroVaga() {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState('');
   const [sucesso, setSucesso] = useState('');
-  const [empresas, setEmpresas] = useState([]);
-  const [carregandoEmpresas, setCarregandoEmpresas] = useState(true);
-
-  useEffect(() => {
-    listarEmpresas()
-      .then((lista) => setEmpresas(Array.isArray(lista) ? lista : []))
-      .catch((error) => setErro(error.message))
-      .finally(() => setCarregandoEmpresas(false));
-  }, []);
-
   // Atualiza no estado somente o campo que foi alterado.
   function handleChange(event) {
     const { name, value } = event.target;
@@ -104,6 +94,9 @@ export default function CadastroVaga() {
         </div>
 
         {/* Formulário responsável por enviar os dados da nova vaga. */}
+        {/* Título: obrigatório e até 120 caracteres no formulário; descrição e cidade são obrigatórias. */}
+        {/* Requisitos são opcionais; salário é obrigatório, não negativo e tem passo 0,01; modalidade e status têm opções fixas. */}
+        {/* Somente uma empresa autenticada pode cadastrar; o gateway obtém a empresa pela sessão. */}
         <form
           onSubmit={handleSubmit}
           className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
@@ -125,33 +118,8 @@ export default function CadastroVaga() {
             />
           </div>
 
-          {/* A vaga armazena o ID da empresa que já foi cadastrada. */}
-          <div>
-            <label htmlFor="empresaId" className="mb-1.5 block text-sm font-semibold">
-              Empresa
-            </label>
-            <select
-              id="empresaId"
-              name="empresaId"
-              value={formulario.empresaId}
-              onChange={handleChange}
-              required
-              disabled={carregandoEmpresas || empresas.length === 0}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-emerald-500 disabled:bg-slate-50"
-            >
-              <option value="">
-                {carregandoEmpresas ? 'Carregando empresas...' : empresas.length ? 'Selecione uma empresa' : 'Cadastre uma empresa antes'}
-              </option>
-              {empresas.map((empresa) => (
-                <option key={empresa._id} value={empresa._id}>{empresa.nome}</option>
-              ))}
-            </select>
-            {!carregandoEmpresas && empresas.length === 0 && (
-              <Link to="/cadastro-empresa" className="mt-2 inline-block text-sm font-semibold text-emerald-700 hover:underline">
-                Cadastrar empresa
-              </Link>
-            )}
-          </div>
+          {/* A sessão autenticada identifica a empresa dona da vaga. */}
+          <p className="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-900">Empresa responsável: <strong>{usuario.nome}</strong></p>
 
           {/* Campo para descrever as atividades e responsabilidades. */}
           <div>
@@ -286,7 +254,7 @@ export default function CadastroVaga() {
             {/* Envia o formulário e impede cliques repetidos durante o envio. */}
             <button
               type="submit"
-            disabled={carregando || carregandoEmpresas || empresas.length === 0}
+              disabled={carregando}
               className="rounded-xl bg-emerald-500 px-5 py-3 text-sm font-bold text-[#102b25] transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {carregando ? 'Cadastrando...' : 'Cadastrar vaga'}

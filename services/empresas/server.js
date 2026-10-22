@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 3001;
 conectarBanco().then(() => {
 
     // Inicia o servidor e fica esperando requisições na porta definida.
-    app.listen(PORT, () => {
+    app.listen(PORT, '127.0.0.1', () => {
         console.log(`Serviço de empresas rodando em http://localhost:${PORT}`);
     });
 });

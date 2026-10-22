@@ -11,6 +11,7 @@
 //   - toda candidatura aponta para um candidato e uma vaga que existem.
 
 const { mongoose, conectar } = require('./conexao');
+const { criarHashSenha } = require('../services/shared/passwords');
 
 // Cada registro tem um ID FIXO. Assim, ao rodar o script de novo, o MongoDB reconhece
 // que o registro já existe e não cria uma cópia. Também permite ligar um registro ao outro.
@@ -73,7 +74,15 @@ const gravar = async (db, nomeColecao, registros) => {
                 { upsert: true }
             );
             if (resultado.upsertedCount) novos++;
-            else jaExistiam++;
+            else {
+                jaExistiam++;
+                if (campos.senha) {
+                    await db.collection(nomeColecao).updateOne(
+                        { _id, senha: { $exists: false } },
+                        { $set: { senha: campos.senha } }
+                    );
+                }
+            }
         } catch (erro) {
             // 11000 = o CNPJ ou e-mail já está em uso por OUTRO registro: pula este.
             if (erro.code === 11000) conflitos++;
@@ -88,6 +97,7 @@ const gravar = async (db, nomeColecao, registros) => {
 
 const popularBanco = async () => {
     const banco = await conectar();
+    const senhaDemoHash = await criarHashSenha('8JobsDemo2026!');
 
     // Só apaga se você pedir com --zerar. Atenção: apaga TODOS os registros dos 4 bancos, inclusive os seus.
     if (process.argv.includes('--zerar')) {
@@ -101,8 +111,8 @@ const popularBanco = async () => {
 
     // Ordem importa: primeiro quem é "apontado" (empresas, candidatos), depois quem aponta.
     // Cada coleção vai para o banco do seu microserviço: banco('vagas') = 8jobs_vagas.
-    await gravar(banco('empresas'), 'empresas', empresas);
-    await gravar(banco('candidatos'), 'candidatos', candidatos);
+    await gravar(banco('empresas'), 'empresas', empresas.map((empresa) => ({ ...empresa, senha: senhaDemoHash })));
+    await gravar(banco('candidatos'), 'candidatos', candidatos.map((candidato) => ({ ...candidato, senha: senhaDemoHash })));
     await gravar(banco('vagas'), 'vagas', vagas);
     await gravar(banco('candidaturas'), 'candidaturas', candidaturas);
 

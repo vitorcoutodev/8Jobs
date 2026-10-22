@@ -1,8 +1,10 @@
 
 import { Link, NavLink } from 'react-router-dom';
 import Mark from './mark.jsx';
+import { useAuth } from '../auth/AuthContext.jsx';
 
 export default function Navbar() {
+  const { usuario, sair } = useAuth();
   // Define a aparência do link conforme a página atual.
   const linkClass = ({ isActive }) =>
     `text-sm font-medium transition hover:text-emerald-600 ${
@@ -28,20 +30,19 @@ export default function Navbar() {
           <NavLink to="/vagas" className={linkClass}>
             Vagas
           </NavLink>
+          {!usuario && <Link to="/cadastro-empresa" className={linkClass}>Cadastrar empresa</Link>}
 
-          <Link to="/cadastro-empresa" className={linkClass}>
-            Cadastrar empresa
-          </Link>
+          {usuario?.role === 'empresa' && <Link to="/vagas/cadastrar" className={linkClass}>Publicar vaga</Link>}
+          {usuario?.role === 'empresa' && <Link to="/candidatos" className={linkClass}>Candidatos</Link>}
         </div>
 
         {/* Ações de acesso à plataforma. */}
         <div className="flex items-center gap-3">
-          <Link
-            to="/cadastro-candidato"
-            className="rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600"
-          >
-            Criar conta
-          </Link>
+          {usuario ? (
+            <button type="button" onClick={() => sair().catch(() => {})} className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white">{usuario.nome} · Sair</button>
+          ) : (
+            <><Link to="/login" className="text-sm font-semibold text-slate-700">Entrar</Link><Link to="/cadastro-candidato" className="rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white">Criar conta</Link></>
+          )}
         </div>
       </nav>
     </header>

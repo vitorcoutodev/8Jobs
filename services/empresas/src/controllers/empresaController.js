@@ -33,7 +33,7 @@ const responderErro = (res, erro, mensagemPadrao) => {
 // Retorna todas as empresas cadastradas.
 const listarEmpresas = async (req, res) => {
     try {
-        const empresas = await Empresa.find();
+        const empresas = await Empresa.find(req.query.id ? { _id: req.query.id } : {});
         res.status(200).json(empresas);
     } catch (erro) {
         responderErro(res, erro, 'Erro ao listar empresas');
@@ -71,6 +71,9 @@ const cadastrarEmpresa = async (req, res) => {
 // Altera os dados de uma empresa.
 const alterarEmpresa = async (req, res) => {
     try {
+        if (Object.hasOwn(req.body || {}, 'senha')) {
+            return res.status(400).json({ erro: 'A senha não pode ser alterada por esta rota' });
+        }
         // new: true devolve a empresa já atualizada.
         // runValidators: true aplica as validações do model também na alteração.
         const empresa = await Empresa.findByIdAndUpdate(

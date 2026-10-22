@@ -16,7 +16,7 @@ const iniciarServidor = async () => {
     try {
         await conectarBanco();
 
-        app.listen(PORT, () => {
+        app.listen(PORT, '127.0.0.1', () => {
             console.log(`Servidor de candidatos rodando na porta ${PORT}`);
         });
     } catch (error) {

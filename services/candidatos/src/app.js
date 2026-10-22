@@ -12,6 +12,7 @@ const cors = require('cors');
 
 // Importa as rotas de candidatos.
 const candidatoRoutes = require('./routes/candidatoRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 // Cria a aplicacao Express.
 const app = express();
@@ -23,6 +24,7 @@ app.use(express.json());
 
 // Define as rotas de candidatos.
 app.use('/candidatos', candidatoRoutes);
+app.use('/auth', authRoutes);
 
 // Exporta a aplicacao.
 module.exports = app;

@@ -39,7 +39,10 @@ const responderErro = (res, erro, mensagemPadrao) => {
 // GET /candidaturas
 const listarCandidaturas = async (req, res) => {
     try {
-        const candidaturas = await Candidatura.find();
+        const filtro = {};
+        if (req.query.candidatoId) filtro.candidatoId = req.query.candidatoId;
+        if (req.query.vagaIds) filtro.vagaId = { $in: req.query.vagaIds.split(',').filter(Boolean) };
+        const candidaturas = await Candidatura.find(filtro);
         return res.status(200).json(candidaturas);
     } catch (erro) {
         return responderErro(res, erro, 'Erro ao listar candidaturas');

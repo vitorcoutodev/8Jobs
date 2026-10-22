@@ -37,7 +37,8 @@ const anexarEmpresa = async (vaga) => {
     const dados = vaga.toObject();
 
     try {
-        dados.empresa = await buscarEmpresa(vaga.empresaId);
+        const empresa = await buscarEmpresa(vaga.empresaId);
+        dados.empresa = empresa ? { _id: empresa._id, nome: empresa.nome, cidade: empresa.cidade } : null;
     } catch (erro) {
         dados.empresa = null;
     }
@@ -57,7 +58,8 @@ const listar = async (req, res) => {
 
         await Promise.all(ids.map(async (id) => {
             try {
-                empresas[id] = await buscarEmpresa(id);
+                const empresa = await buscarEmpresa(id);
+                empresas[id] = empresa ? { _id: empresa._id, nome: empresa.nome, cidade: empresa.cidade } : null;
             } catch (erro) {
                 empresas[id] = null;
             }

@@ -4,15 +4,18 @@ import { Link, useNavigate } from 'react-router-dom';
 
 // Importa a função responsável por cadastrar empresas na API.
 import { cadastrarEmpresa } from '../services/empresasService.js';
+import { useAuth } from '../auth/AuthContext.jsx';
 
 export default function CadastroEmpresa() {
   const navigate = useNavigate();
+  const { entrar } = useAuth();
 
   // Guarda os dados digitados no formulário.
   const [formulario, setFormulario] = useState({
     nome: '',
     cnpj: '',
     email: '',
+    senha: '',
     telefone: '',
     cidade: '',
   });
@@ -42,6 +45,7 @@ export default function CadastroEmpresa() {
     try {
       // Chama a função do empresasService.js.
       await cadastrarEmpresa(formulario);
+      await entrar({ tipo: 'empresa', email: formulario.email, senha: formulario.senha });
 
       setSucesso('Empresa cadastrada com sucesso!');
 
@@ -50,6 +54,7 @@ export default function CadastroEmpresa() {
         nome: '',
         cnpj: '',
         email: '',
+        senha: '',
         telefone: '',
         cidade: '',
       });
@@ -100,6 +105,9 @@ export default function CadastroEmpresa() {
         </div>
 
         {/* Formulário de cadastro. */}
+        {/* Nome: obrigatório, até 120 caracteres só no formulário; CNPJ: obrigatório e único, sem checar formato ou dígitos verificadores. */}
+        {/* E-mail é validado e único; senha exige pelo menos 8 caracteres. */}
+        {/* Telefone é obrigatório no formulário, mas opcional no modelo; cidade é obrigatória. */}
         <form
           onSubmit={handleSubmit}
           className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
@@ -118,6 +126,11 @@ export default function CadastroEmpresa() {
               placeholder="Ex.: Empresa Tecnologia Ltda."
               className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500"
             />
+          </div>
+
+          <div>
+            <label htmlFor="senha" className="mb-1.5 block text-sm font-semibold">Senha</label>
+            <input id="senha" name="senha" type="password" value={formulario.senha} onChange={handleChange} required minLength={8} autoComplete="new-password" placeholder="Pelo menos 8 caracteres" className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-emerald-500" />
           </div>
 
           <div>
@@ -202,6 +215,7 @@ export default function CadastroEmpresa() {
           >
             {carregando ? 'Cadastrando...' : 'Cadastrar empresa'}
           </button>
+          <p className="text-center text-sm text-slate-500">Já tem conta? <Link to="/login" className="font-semibold text-emerald-700">Entrar</Link></p>
 
           <p className="text-center text-sm text-slate-500">
             É candidato?{' '}

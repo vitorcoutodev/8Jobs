@@ -1,14 +1,16 @@
-import { criarStore, instalarApiSimulada, novaEmpresa, novaVaga } from '../support/fakeApi';
+import { criarStore, instalarApiSimulada, novaEmpresa, novaVaga, novoCandidatoNoBanco } from '../support/fakeApi';
 
 describe('Seleção de vaga (detalhes)', () => {
   let store;
   let empresa;
   let vaga;
+  let candidato;
 
   beforeEach(() => {
     store = criarStore();
     instalarApiSimulada(store);
     empresa = novaEmpresa(store);
+    candidato = novoCandidatoNoBanco(store);
     vaga = novaVaga(store, empresa, {
       salario: 5200,
       modalidade: 'Remoto',
@@ -68,10 +70,15 @@ describe('Seleção de vaga (detalhes)', () => {
     cy.location('pathname').should('eq', '/vagas');
   });
 
-  it('"Candidatar-se à vaga" abre o formulário com a vaga já selecionada', () => {
+  it('pede login e depois abre candidatura com a vaga já selecionada', () => {
     cy.visit(`/vagas/${vaga._id}`);
 
     cy.contains('a', 'Candidatar-se à vaga').click();
+    cy.location('pathname').should('eq', '/login');
+    cy.get('[aria-label="Tipo de conta"]').select('candidato');
+    cy.get('[aria-label="E-mail"]').type(candidato.email);
+    cy.get('[aria-label="Senha"]').type('SenhaTeste2026!');
+    cy.contains('button', 'Entrar').click();
 
     cy.location('pathname').should('eq', '/formulario');
     cy.location('search').should('eq', `?vagaId=${vaga._id}`);
@@ -85,6 +92,9 @@ describe('Seleção de vaga (detalhes)', () => {
     cy.contains('h1', fechada.titulo).should('be.visible');
     cy.contains('FECHADA').should('be.visible');
   });
+
+// A seção “situações inválidas” do teste 03 verifica como a página de detalhes reage quando a 
+// URL não aponta para uma vaga válida. Ela cobre quatro casos:
 
   describe('situações inválidas', () => {
     it('vaga que não existe mostra "Vaga não encontrada"', () => {

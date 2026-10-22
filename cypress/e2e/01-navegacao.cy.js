@@ -58,14 +58,20 @@ describe('Navegação', () => {
     cy.location('pathname').should('eq', '/');
   });
 
-  it('abre as páginas digitando a URL diretamente', () => {
+  it('abre páginas públicas digitando a URL diretamente', () => {
     cy.visit('/vagas');
     cy.contains('h1', 'Vagas disponíveis').should('be.visible');
 
-    cy.visit('/formulario');
-    cy.contains('h1', 'Candidate-se a uma vaga').should('be.visible');
-
     cy.visit('/cadastro-candidato');
     cy.contains('h1', 'Crie seu cadastro').should('be.visible');
+  });
+
+  it('redireciona páginas protegidas para o login', () => {
+    cy.visit('/formulario');
+    cy.location('pathname').should('eq', '/login');
+    cy.visit('/candidatos');
+    cy.location('pathname').should('eq', '/login');
+    cy.visit('/vagas/cadastrar');
+    cy.location('pathname').should('eq', '/login');
   });
 });

@@ -15,7 +15,7 @@ const iniciarServidor = async () => {
     await conectarBanco();
 
     // Inicia o servidor HTTP após a conexão com o banco.
-    app.listen(PORT, () => {
+    app.listen(PORT, '127.0.0.1', () => {
         console.log(`Microserviço de candidaturas rodando na porta ${PORT}`);
     });
 };

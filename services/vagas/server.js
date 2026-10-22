@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3002;
 
 // Primeiro conecta ao banco, e só depois sobe o servidor.
 conectarBanco().then(() => {
-    app.listen(PORT, () => {
+    app.listen(PORT, '127.0.0.1', () => {
         console.log(`Serviço de vagas rodando em http://localhost:${PORT}`);
     });
 });

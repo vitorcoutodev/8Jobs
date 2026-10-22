@@ -1,8 +1,8 @@
 8JOBS — EXPLICAÇÃO DO PROJETO
 
 Este guia descreve o código atual do 8Jobs: uma plataforma web de vagas feita com
-React no frontend, Node.js e Express no backend, quatro microserviços e quatro
-bancos MongoDB separados.
+React no frontend, Node.js e Express no backend, quatro microserviços de domínio,
+quatro bancos MongoDB de domínio e um banco de sessões do gateway.
 
 
 1. VISÃO GERAL
@@ -17,6 +17,7 @@ acessa o banco que lhe pertence.
                         | HTTP / JSON
                         v
                  GATEWAY (:3000)
+                 8jobs_sessions
                         |
        +----------------+----------------+----------------+
        |                |                |                |
@@ -80,6 +81,7 @@ As páginas estão ligadas às rotas abaixo:
 - /cadastro-candidato — cadastro de candidato.
 - /candidatos — lista de candidatos.
 - /formulario — formulário de candidatura.
+- /login — entrada de candidatos e empresas.
 
 frontend/src/services/api.js define o endereço base da API. Por padrão, usa
 http://localhost:3000/api. A variável VITE_API_URL pode substituir esse endereço.
@@ -93,7 +95,7 @@ O backend usa Node.js e Express. Em cada serviço, as rotas recebem os pedidos,
 os controllers aplicam as regras, os models definem os dados e o Mongoose lê ou
 grava no MongoDB.
 
-Gateway — server.js, porta 3000
+Gateway — gateway/server.js, porta 3000
 
 Recebe os pedidos públicos em /api e encaminha /api/empresas, /api/vagas,
 /api/candidatos e /api/candidaturas para o serviço correspondente. Os endereços
@@ -129,6 +131,14 @@ Os quatro serviços usam Mongoose e a variável MONGODB_URI nos arquivos .env
 locais. Os arquivos .env.example mostram a configuração padrão para MongoDB
 local em mongodb://localhost:27017.
 
+O login valida as credenciais no microserviço de candidatos ou empresas. As
+senhas são transformadas em hashes scrypt antes de serem gravadas; a senha em
+texto não é armazenada nem devolvida pela API. O gateway mantém uma sessão
+MongoDB em 8jobs_sessions e envia um cookie HttpOnly ao navegador. Candidatos
+precisam estar autenticados para se candidatar; empresas precisam estar
+autenticadas para publicar vagas e consultar candidatos. O gateway confere o
+papel da conta e a propriedade das vagas.
+
 Os vínculos entre bancos são feitos guardando IDs, não copiando nem acessando
 coleções remotas:
 
@@ -139,7 +149,8 @@ Regras relevantes:
 
 - Vaga exige título, descrição, salário não negativo, modalidade, cidade e
   empresaId. O status começa como ABERTA e pode ser FECHADA.
-- Candidato exige nome, e-mail, telefone e cidade; o e-mail é único.
+- Candidato exige nome, e-mail, senha, telefone e cidade; o e-mail é único e a
+  senha é armazenada como hash scrypt.
 - Candidatura só pode apontar para candidato existente e vaga aberta. O status
   inicial é ENVIADA; outros valores possíveis são EM_ANALISE, APROVADA e
   REJEITADA.
@@ -162,10 +173,9 @@ Server. No Compass, conecte usando mongodb://127.0.0.1:27017.
 No PowerShell, se o comando npm for bloqueado pela política de execução de
 scripts, use npm.cmd nos exemplos abaixo. No Git Bash, use npm normalmente.
 
-Na pasta raiz do projeto, instale todas as dependências do frontend e dos quatro
-serviços de uma vez. O npm workspaces está configurado na raiz:
+Na pasta raiz do projeto, instale as dependências do frontend, gateway e testes:
 
-    npm.cmd install
+    npm.cmd run setup
 
 Para iniciar tudo, use um único comando na raiz:
 
@@ -189,22 +199,23 @@ use npm e npm run dev normalmente.
 
 7. TESTES
 
-Os testes Jest dos microserviços ficam em services/*/test. Na raiz, rode:
+Os testes Jest dos microserviços ficam em services/*/test, e a configuração fica
+em services/jest.config.js. Na raiz, rode:
 
     npm.cmd test
 
 Os testes Cypress estão em cypress/e2e e cobrem navegação, consulta e seleção
-de vagas e candidatura. Eles usam uma API simulada em
+de vagas, cadastro de contas, login, publicação de vagas e candidatura. Eles usam uma API simulada em
 cypress/support/fakeApi.js; para esses testes, não é preciso iniciar MongoDB,
 microserviços ou gateway. Inicie o frontend e, em outro terminal, rode:
 
     npm.cmd run dev:frontend
-    npx.cmd cypress open
+    npx.cmd cypress open --project . --config-file cypress/cypress.config.js
 
 
 8. ARQUIVOS IMPORTANTES
 
-- server.js — gateway Express.
+- gateway/server.js e gateway/app.js — gateway Express, login, sessões e autorização.
 - frontend/src/App.jsx — rotas do React.
 - frontend/src/services/ — chamadas HTTP do frontend.
 - services/*/src/routes/ — rotas HTTP dos microserviços.
