@@ -2,7 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
+const { MongoStore } = require('connect-mongo');
 const rateLimit = require('express-rate-limit');
 
 // Cria o gateway e permite injetar um armazenamento em memória nos testes.
