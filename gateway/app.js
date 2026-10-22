@@ -3,7 +3,6 @@ const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
 const { MongoStore } = require('connect-mongo');
-const rateLimit = require('express-rate-limit');
 
 // Cria o gateway e permite injetar um armazenamento em memória nos testes.
 const criarGateway = ({ store, fetcher = global.fetch } = {}) => {
@@ -36,8 +35,6 @@ const criarGateway = ({ store, fetcher = global.fetch } = {}) => {
         saveUninitialized: false,
         cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 7 * 24 * 60 * 60 * 1000 }
     }));
-    const limitadorLogin = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false });
-
     // Publica um endereço simples de saúde para confirmar que o gateway iniciou.
     app.get('/', (_req, res) => res.json({ mensagem: 'API Gateway 8Jobs funcionando!' }));
 
@@ -64,7 +61,7 @@ const criarGateway = ({ store, fetcher = global.fetch } = {}) => {
     });
 
     // Valida a senha no microserviço dono da conta e cria uma sessão renovada.
-    app.post('/api/auth/login', limitadorLogin, async (req, res) => {
+    app.post('/api/auth/login', async (req, res) => {
         const { tipo, email, senha } = req.body || {};
         if (!['candidato', 'empresa'].includes(tipo) || !email || !senha) {
             return res.status(400).json({ erro: 'Informe o tipo de conta, e-mail e senha' });

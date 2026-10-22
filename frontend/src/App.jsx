@@ -8,6 +8,7 @@ import CadastroVaga from './pages/cadastroVaga.jsx';
 import CadastroEmpresa from './pages/cadastroEmpresa.jsx';
 import CadastroCandidato from './pages/cadastroCandidato.jsx';
 import ListarCandidatos from './pages/listarCandidatos.jsx';
+import ListarCandidaturas from './pages/listarCandidaturas.jsx';
 import CandidaturaPage from './pages/CandidaturaPage.jsx';
 import Login from './pages/login.jsx';
 
@@ -34,6 +35,9 @@ export default function App() {
         A listagem de candidatos é protegida e só pode ser acessada por empresas autenticadas.
         Se a pessoa estiver logada com o perfil errado, será redirecionada. */}
         <Route path="/candidatos" element={<RequireAuth role="empresa"><ListarCandidatos /></RequireAuth>} />
+
+        {/* Candidaturas recebidas nas vagas da empresa autenticada. */}
+        <Route path="/candidaturas" element={<RequireAuth role="empresa"><ListarCandidaturas /></RequireAuth>} />
 
         {/* Listagem de vagas. */}
         <Route path="/vagas" element={<ListarVagas />} />

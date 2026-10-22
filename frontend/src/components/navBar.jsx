@@ -30,10 +30,11 @@ export default function Navbar() {
           <NavLink to="/vagas" className={linkClass}>
             Vagas
           </NavLink>
-          {!usuario && <Link to="/cadastro-empresa" className={linkClass}>Cadastrar empresa</Link>}
+          {!usuario && <Link to="/cadastro-empresa" className="text-sm font-medium text-slate-600 transition hover:text-emerald-600">Cadastrar empresa</Link>}
 
-          {usuario?.role === 'empresa' && <Link to="/vagas/cadastrar" className={linkClass}>Publicar vaga</Link>}
-          {usuario?.role === 'empresa' && <Link to="/candidatos" className={linkClass}>Candidatos</Link>}
+          {usuario?.role === 'empresa' && <Link to="/vagas/cadastrar" className="text-sm font-medium text-slate-600 transition hover:text-emerald-600">Publicar vaga</Link>}
+          {usuario?.role === 'empresa' && <Link to="/candidatos" className="text-sm font-medium text-slate-600 transition hover:text-emerald-600">Candidatos</Link>}
+          {usuario?.role === 'empresa' && <NavLink to="/candidaturas" className={linkClass}>Candidaturas</NavLink>}
         </div>
 
         {/* Ações de acesso à plataforma. */}
@@ -45,6 +46,16 @@ export default function Navbar() {
           )}
         </div>
       </nav>
+      {usuario?.role === 'empresa' && (
+        <div className="border-t border-slate-100 px-5 py-2 md:hidden sm:px-8">
+          <NavLink
+            to="/candidaturas"
+            className={({ isActive }) => `inline-flex rounded-lg px-3 py-2 text-sm font-semibold transition ${isActive ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-50'}`}
+          >
+            Candidaturas
+          </NavLink>
+        </div>
+      )}
     </header>
   );
 }
